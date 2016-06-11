@@ -6,6 +6,10 @@ Automatically add new transaction entries daily for two main cases:
 
 > For tax-compatible yearly depreciation take a look at this [plugin](https://bitbucket.org/snippets/happyalu/EAMgj/beancount-automated-depreciation-plugin) by Alok Parlikar under MIT license.
 
+# Status
+
+Works, but doesn't have most of options implemented. Expect it to be buggy, thus I would love to hear from you if you found a bug.
+
 # Install
 
 Copy to path used for python. For example, `$HOME/.local/lib/python3.5/site-packages/beancount_interpolate` would do on Debian. If in doubt, look where `beancount` folder is and copy next to it.
