@@ -20,7 +20,10 @@ def get_postings(duration, closing_dates, account, posting, entry, MIN_VALUE):
     else:
         amountEach = math.ceil(posting.units.number / duration * 100) / D(str(100))
     if(abs(amountEach) < abs(MIN_VALUE)):
-        amountEach = MIN_VALUE
+        if(posting.units.number > 0):
+            amountEach = MIN_VALUE
+        else:
+            amountEach = -MIN_VALUE
         duration = math.floor( abs(posting.units.number) / MIN_VALUE )
         closing_dates = closing_dates[0:duration]
     remainder = sub(posting.units, Amount( amountEach * duration, posting.units.currency) )
