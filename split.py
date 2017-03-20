@@ -9,6 +9,8 @@ from beancount.core import data
 from beancount.core.position import Position
 from beancount.core.number import ZERO, D, round_to
 
+from .get_params import get_params
+
 __plugins__ = ['split']
 
 def get_amounts(duration, posting, MIN_VALUE):
@@ -102,15 +104,6 @@ def get_entries(duration, closing_dates, entry, MIN_VALUE):
     return new_transactions
 
 
-def get_params(aliases, entry, posting):
-    for alias in aliases:
-        if hasattr(posting, 'meta') and posting.meta and alias in posting.meta:
-            return posting.meta[alias]
-        if hasattr(entry, 'meta') and entry.meta and alias in entry.meta:
-            return entry.meta[alias]
-        if hasattr(entry, 'tags') and hasattr(entry.tags, alias):
-            return ''
-    return False
 
 
 def split(entries, options_map, config_string):
