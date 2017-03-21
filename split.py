@@ -66,9 +66,7 @@ def get_entries(duration, closing_dates, entry, MIN_VALUE):
     accumulator = firsts.index(max(firsts))
     remainder = D(str(0));
 
-    for i in range(max_duration):
-        if i >= len(closing_dates):
-            break
+    for i in range( min(len(closing_dates), max_duration) ):
         postings = []
 
         doublecheck = [];
@@ -146,8 +144,7 @@ def split(entries, options_map, config_string):
 
         dates = get_dates(start, duration, MAX_NEW_TX)
 
-        if len(dates) > 0:
-            newEntries = newEntries + get_entries(duration, dates, entry, MIN_VALUE)
+        newEntries = newEntries + get_entries(duration, dates, entry, MIN_VALUE)
 
     for trash in trashbin:
         entries.remove(trash)
