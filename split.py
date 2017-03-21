@@ -11,6 +11,7 @@ from beancount.core.number import ZERO, D, round_to
 
 from .get_params import get_params
 from .get_dates import get_dates
+from .parse_params import parse_params
 
 __plugins__ = ['split']
 
@@ -141,22 +142,7 @@ def split(entries, options_map, config_string):
 
         trashbin.append(entry)
 
-        # Infer Duration, start and steps. Format: [123|KEYWORD] [@ YYYY-MM-DD]
-        parts = re.findall("^(\s*?(\S+))?\s*?(@\s*?([0-9]{4})-([0-9]{2})-([0-9]{2}))?\s*?$", params)[0]
-        try:
-            start = datetime.date(int(parts[3]), int(parts[4]), int(parts[5]))
-        except:
-            start = entry.date
-        try: # TODO: DEFAULT_PERIOD
-            duration = int(parts[0])
-        except:
-            dictionary = {
-                'Day': 1,
-                'Week': 7,
-                'Month': 30,
-                'Year': 365
-            }
-            duration = dictionary[parts[0]]
+        start, duration = parse_params(params, entry.date)
 
         dates = get_dates(start, duration, MAX_NEW_TX)
 

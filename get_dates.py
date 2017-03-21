@@ -1,3 +1,5 @@
+import datetime
+
 def get_dates(begin_date, duration, MAX_NEW_TX):
     """Given a begin_date, find out all dates until today"""
     dates = []
