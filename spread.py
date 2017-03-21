@@ -80,6 +80,30 @@ def get_postings(duration, closing_dates, account, posting, entry, MIN_VALUE):
     return new_transactions
 
 
+def edit_account(entry, p_index, ACCOUNT_INCOME, ACCOUNT_EXPENSES):
+    """Modify original entry to replace Income/Expense with Liability/Asset"""
+    posting = entry.postings[p_index]
+    account = posting.account.split(':')
+    if(account[0] == 'Income'):
+        side = ACCOUNT_INCOME
+    elif(account[0] == 'Expenses'):
+        side = ACCOUNT_EXPENSES
+    else:
+        return False
+    account.pop(0)
+    account.insert(0, side)
+    account = ':'.join(account)
+    entry.postings.pop(p_index)
+    entry.postings.insert(p_index, data.Posting(
+        account=account,
+        units=Amount(posting.units.number, posting.units.currency),
+        cost=None,
+        price=None,
+        flag=None,
+        meta=None))
+
+    return account
+
 def spread(entries, options_map, config_string):
     """Add depreciation entries for fixed assets.  See module docstring for more
     details and example"""
@@ -110,35 +134,16 @@ def spread(entries, options_map, config_string):
                 if not params:
                     continue
 
-                ## Debug
-                # print('L%4d Posting #%d-%d'%(int(p.meta['lineno']), i, j), p)
-
-                ## Modify original entry to replace Income/Expense with Liability/Asset
-                account = p.account.split(':')
-                if(account[0] == 'Income'):
-                    side = ACCOUNT_INCOME
-                elif(account[0] == 'Expenses'):
-                    side = ACCOUNT_EXPENSES
-                else:
-                    continue ## Filter out non-Income/Expense postings.
-                account.pop(0)
-                account.insert(0, side)
-                account = ':'.join(account)
-                entry.postings.pop(j)
-                entry.postings.insert(j, data.Posting(
-                    account=account,
-                    units=Amount(p.units.number, p.units.currency),
-                    cost=None,
-                    price=None,
-                    flag=None,
-                    meta=None))
+                # `entry` is modified within
+                new_account = edit_account(entry, j, ACCOUNT_INCOME, ACCOUNT_EXPENSES)
+                if not new_account:
+                    continue
 
                 start, duration = parse_params(params, entry.date)
 
                 dates = get_dates(start, duration, MAX_NEW_TX)
 
-                # print(params, entry)
                 if len(dates) > 0:
-                    newEntries = newEntries + get_postings(duration, dates, account, p, entry, MIN_VALUE)
+                    newEntries = newEntries + get_postings(duration, dates, new_account, p, entry, MIN_VALUE)
 
     return entries + newEntries, errors
