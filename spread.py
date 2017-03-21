@@ -10,6 +10,7 @@ from beancount.core.position import Position
 from beancount.core.number import ZERO, D, round_to
 
 from .get_params import get_params
+from .get_dates import get_dates
 
 __plugins__ = ['spread']
 
@@ -148,24 +149,10 @@ def spread(entries, options_map, config_string):
                     }
                     duration = dictionary[parts[0]]
 
-                if(duration<=366):  # TODO: MAX_NEW_TX
-                    step = 1
-                else:
-                    step = 1
-
-                # Stretch over time
-                closing_dates = []
-                d = start
-                while d < start + datetime.timedelta(days=duration) and d <= datetime.date.today():
-                    closing_dates.append(d)
-                    d = d + datetime.timedelta(days=step)
+                dates = get_dates(start, duration, MAX_NEW_TX)
 
                 # print(params, entry)
-                if len(closing_dates) > 0:
-                    newEntries = newEntries + get_postings(duration, closing_dates, account, p, entry, MIN_VALUE)
+                if len(dates) > 0:
+                    newEntries = newEntries + get_postings(duration, dates, account, p, entry, MIN_VALUE)
 
     return entries + newEntries, errors
-
-
-def get_new_dates(begin_date, duration):
-    """Given a begin_date, find out all dates until today"""
