@@ -130,22 +130,18 @@ def split(entries, options_map, config_string):
     newEntries = []
     trashbin = []
     for i, entry in enumerate(entries):
-        parts = []
-        if hasattr(entry, 'postings'):
-            for j, p in enumerate(entry.postings):
-                # TODO: ALIASES_BEFORE
-                params = check_aliases_entry(ALIASES_AFTER, entry, ALIAS_SEPERATOR)
-            if not params:
-                continue
-        else:
+
+        if not hasattr(entry, 'postings'):
+            continue
+
+        # TODO: ALIASES_BEFORE
+        params = check_aliases_entry(ALIASES_AFTER, entry, ALIAS_SEPERATOR)
+        if not params:
             continue
 
         trashbin.append(entry)
-
         start, duration = parse_params(params, entry.date)
-
         dates = get_dates(start, duration, MAX_NEW_TX)
-
         newEntries = newEntries + get_entries(duration, dates, entry, MIN_VALUE)
 
     for trash in trashbin:
