@@ -9,7 +9,7 @@ from beancount.core import data
 from beancount.core.position import Position
 from beancount.core.number import ZERO, D, round_to
 
-from .get_params import check_aliases_entry
+from .check_aliases import check_aliases_entry
 from .get_dates import get_dates
 from .parse_params import parse_params
 
