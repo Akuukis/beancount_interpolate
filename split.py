@@ -44,8 +44,14 @@ def distribute_over_duration(max_duration, total_value, MIN_VALUE):
     return amounts
 
 
-def get_entries(duration, closing_dates, entry, MIN_VALUE):
+def longest_leg(all_amounts):
+    firsts = []
+    for amounts in all_amounts:
+        firsts.append( abs(amounts[0]) )
+    return firsts.index(max(firsts))
 
+
+def get_entries(duration, closing_dates, entry, MIN_VALUE):
     all_amounts = [];
     for posting in entry.postings:
         all_amounts.append( distribute_over_duration(duration, posting.units.number, MIN_VALUE) )
@@ -54,10 +60,7 @@ def get_entries(duration, closing_dates, entry, MIN_VALUE):
     for i in all_amounts:
         max_duration = max(max_duration, len(i))
 
-    firsts = []
-    for amounts in all_amounts:
-        firsts.append( abs(amounts[0]) )
-    accumulator = firsts.index(max(firsts))
+    accumulator_index = longest_leg(all_amounts)
 
     remainder = D(str(0));
     new_transactions = []
@@ -70,7 +73,7 @@ def get_entries(duration, closing_dates, entry, MIN_VALUE):
                 doublecheck.append(all_amounts[p][i])
         should_be_zero = sum(doublecheck)
         if should_be_zero != 0:
-            all_amounts[accumulator][i] -= D(str(should_be_zero))
+            all_amounts[accumulator_index][i] -= D(str(should_be_zero))
             remainder += should_be_zero
 
         for p, posting in enumerate(entry.postings):
@@ -131,9 +134,9 @@ def split(entries, options_map, config_string):
             continue
 
         trashbin.append(entry)
-        start, duration = parse_params(params, entry.date)
-        closing_dates = get_dates(start, duration, MAX_NEW_TX)
-        newEntries = newEntries + get_entries(duration, closing_dates, entry, MIN_VALUE)
+        start, total_duration = parse_params(params, entry.date)
+        closing_dates = get_dates(start, total_duration, MAX_NEW_TX)
+        newEntries = newEntries + get_entries(total_duration, closing_dates, entry, MIN_VALUE)
 
     for trash in trashbin:
         entries.remove(trash)
