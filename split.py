@@ -15,31 +15,31 @@ from .parse_params import parse_params
 
 __plugins__ = ['split']
 
-def distribute_over_duration(max_duration, posting, MIN_VALUE):
+def distribute_over_duration(max_duration, total_value, MIN_VALUE):
     ## Distribute value over points. TODO: add new methods
 
-    if(posting.units.number > 0):
+    if(total_value > 0):
         def round_to(n):
             return math.floor(n*100)/100
     else:
         def round_to(n):
             return math.ceil(n*100)/100
 
-    if(abs(posting.units.number/max_duration) > abs(MIN_VALUE)):
-        amountEach = posting.units.number / max_duration
+    if(abs(total_value/max_duration) > abs(MIN_VALUE)):
+        amountEach = total_value / max_duration
         duration = max_duration
     else:
-        if(posting.units.number > 0):
+        if(total_value > 0):
             amountEach = MIN_VALUE
         else:
             amountEach = -MIN_VALUE
-        duration = math.floor( abs(posting.units.number) / MIN_VALUE )
+        duration = math.floor( abs(total_value) / MIN_VALUE )
 
     amounts = [];
     accumulated_remainder = D(str(0));
     for i in range(duration):
-        amounts.append(Amount( D(str(round_to(amountEach + accumulated_remainder))), posting.units.currency ))
-        accumulated_remainder += amountEach - amounts[len(amounts)-1].number
+        amounts.append( D(str(round_to(amountEach + accumulated_remainder))) )
+        accumulated_remainder += amountEach - amounts[len(amounts)-1]
 
     return amounts
 
@@ -48,7 +48,7 @@ def get_entries(duration, closing_dates, entry, MIN_VALUE):
 
     all_amounts = [];
     for posting in entry.postings:
-        all_amounts.append( distribute_over_duration(duration, posting, MIN_VALUE) )
+        all_amounts.append( distribute_over_duration(duration, posting.units.number, MIN_VALUE) )
 
     max_duration = 0;
     for i in all_amounts:
@@ -56,7 +56,7 @@ def get_entries(duration, closing_dates, entry, MIN_VALUE):
 
     firsts = []
     for amounts in all_amounts:
-        firsts.append( abs(amounts[0].number) )
+        firsts.append( abs(amounts[0]) )
     accumulator = firsts.index(max(firsts))
 
     remainder = D(str(0));
@@ -67,17 +67,17 @@ def get_entries(duration, closing_dates, entry, MIN_VALUE):
         doublecheck = [];
         for p, posting in enumerate(entry.postings):
             if i < len(all_amounts[p]):
-                doublecheck.append(all_amounts[p][i].number)
+                doublecheck.append(all_amounts[p][i])
         should_be_zero = sum(doublecheck)
         if should_be_zero != 0:
-            all_amounts[accumulator][i].number -= D(str(should_be_zero))
+            all_amounts[accumulator][i] -= D(str(should_be_zero))
             remainder += should_be_zero
 
         for p, posting in enumerate(entry.postings):
             if i < len(all_amounts[p]):
                 postings.append(data.Posting(
                     account=posting.account,
-                    units=all_amounts[p][i],
+                    units=Amount(all_amounts[p][i], posting.units.currency),
                     cost=None,
                     price=None,
                     flag=posting.flag,
