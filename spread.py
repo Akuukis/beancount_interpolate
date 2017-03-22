@@ -16,7 +16,7 @@ from .parse_params import parse_params
 
 __plugins__ = ['spread']
 
-def get_postings(duration, closing_dates, account, posting, entry, MIN_VALUE):
+def get_entries(duration, closing_dates, account, posting, entry, MIN_VALUE):
     new_transactions = []
 
     ## Distribute value over points. TODO: add new methods
@@ -81,29 +81,34 @@ def get_postings(duration, closing_dates, account, posting, entry, MIN_VALUE):
     return new_transactions
 
 
-def edit_account(entry, p_index, ACCOUNT_INCOME, ACCOUNT_EXPENSES):
+def edit_entry_accounts(entry, ACCOUNT_INCOME, ACCOUNT_EXPENSES):
     """Modify original entry to replace Income/Expense with Liability/Asset"""
-    posting = entry.postings[p_index]
-    account = posting.account.split(':')
-    if(account[0] == 'Income'):
-        side = ACCOUNT_INCOME
-    elif(account[0] == 'Expenses'):
-        side = ACCOUNT_EXPENSES
-    else:
-        return False
-    account.pop(0)
-    account.insert(0, side)
-    account = ':'.join(account)
-    entry.postings.pop(p_index)
-    entry.postings.insert(p_index, data.Posting(
-        account=account,
-        units=Amount(posting.units.number, posting.units.currency),
-        cost=None,
-        price=None,
-        flag=None,
-        meta=None))
+    modified_postings = []
+    for i, posting in enumerate(entry.postings):
+        account = posting.account.split(':')
+        if(account[0] == 'Income'):
+            side = ACCOUNT_INCOME
+        elif(account[0] == 'Expenses'):
+            side = ACCOUNT_EXPENSES
+        else:
+            continue
+        account.pop(0)
+        account.insert(0, side)
 
-    return account
+        new_account = ':'.join(account)
+        modified_postings.append( (i, new_account) )
+
+        entry.postings.pop(i)
+        entry.postings.insert(i, data.Posting(
+            account=new_account,
+            units=Amount(posting.units.number, posting.units.currency),
+            cost=None,
+            price=None,
+            flag=None,
+            meta=None))
+
+    return modified_postings
+
 
 def spread(entries, options_map, config_string):
     """Add depreciation entries for fixed assets.  See module docstring for more
@@ -130,23 +135,41 @@ def spread(entries, options_map, config_string):
     ## Filter transaction entries that have tag or meta or its posting has meta.
     newEntries = []
     for i, entry in enumerate(entries):
-        if hasattr(entry, 'postings'):
-            for j, p in enumerate(entry.postings):
-                # TODO: ALIASES_BEFORE
-                params = check_aliases_posting(ALIASES_AFTER, entry, p) or check_aliases_entry(ALIASES_AFTER, entry, ALIAS_SEPERATOR)
-                if not params:
-                    continue
 
-                # `entry` is modified within
-                new_account = edit_account(entry, j, ACCOUNT_INCOME, ACCOUNT_EXPENSES)
-                if not new_account:
-                    continue
+        if not hasattr(entry, 'postings'):
+            continue
 
-                start, duration = parse_params(params, entry.date)
+        selected_postings = []
+        for i, posting in enumerate(entry.postings):
+            # TODO: ALIASES_BEFORE
+            params = check_aliases_posting(ALIASES_AFTER, posting) \
+                  or check_aliases_entry(ALIASES_AFTER, entry, ALIAS_SEPERATOR) \
+                  or False
+            if not params:
+                continue
+            account = posting.account.split(':')
+            root_account = account.pop(0)
+            new_account = (root_account == 'Income' and ACCOUNT_INCOME+':'+':'.join(account)) \
+                       or (root_account == 'Expenses' and ACCOUNT_EXPENSES+':'+':'.join(account)) \
+                       or False
+            if not new_account:
+                continue
+            selected_postings.append( (i, new_account, params, posting) )
 
-                dates = get_dates(start, duration, MAX_NEW_TX)
+        for i, new_account, params, posting in selected_postings:
+            entry.postings.pop(i)
+            entry.postings.insert(i, data.Posting(
+                account=new_account,
+                units=Amount(posting.units.number, posting.units.currency),
+                cost=None,
+                price=None,
+                flag=None,
+                meta=None))
 
-                if len(dates) > 0:
-                    newEntries = newEntries + get_postings(duration, dates, new_account, p, entry, MIN_VALUE)
+        for index, side, params, posting in selected_postings:
+            start, duration = parse_params(params, entry.date)
+            dates = get_dates(start, duration, MAX_NEW_TX)
+            if len(dates) > 0:
+                newEntries = newEntries + get_entries(duration, dates, new_account, posting, entry, MIN_VALUE)
 
     return entries + newEntries, errors
