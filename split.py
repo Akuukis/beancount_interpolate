@@ -9,7 +9,7 @@ from beancount.core import data
 from beancount.core.position import Position
 from beancount.core.number import ZERO, D, round_to
 
-from .get_params import get_params
+from .get_params import check_aliases_entry
 from .get_dates import get_dates
 from .parse_params import parse_params
 
@@ -117,6 +117,7 @@ def split(entries, options_map, config_string):
         raise RuntimeError("Invalid plugin configuration: should be a single dict.")
     ALIASES_BEFORE   = config_obj.pop('aliases_before'  , ['splitBefore'])
     ALIASES_AFTER    = config_obj.pop('aliases_after'   , ['splitAfter', 'split'])
+    ALIAS_SEPERATOR  = config_obj.pop('aliases_after'   , '-')
     DEFAULT_PERIOD   = config_obj.pop('default_period'  , 'Month')
     DEFAULT_METHOD   = config_obj.pop('default_method'  , 'SL')
     MIN_VALUE        = config_obj.pop('min_value'       , 0.05)
@@ -132,7 +133,8 @@ def split(entries, options_map, config_string):
         parts = []
         if hasattr(entry, 'postings'):
             for j, p in enumerate(entry.postings):
-                params = get_params(ALIASES_AFTER, entry, p)  # TODO: ALIASES_BEFORE
+                # TODO: ALIASES_BEFORE
+                params = check_aliases_entry(ALIASES_AFTER, entry, ALIAS_SEPERATOR)
             if not params:
                 continue
         else:

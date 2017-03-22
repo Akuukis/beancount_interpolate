@@ -9,7 +9,8 @@ from beancount.core import data
 from beancount.core.position import Position
 from beancount.core.number import ZERO, D, round_to
 
-from .get_params import get_params
+from .get_params import check_aliases_entry
+from .get_params import check_aliases_posting
 from .get_dates import get_dates
 from .parse_params import parse_params
 
@@ -117,6 +118,7 @@ def spread(entries, options_map, config_string):
     ACCOUNT_EXPENSES = config_obj.pop('account_expenses', 'Assets:Current')
     ALIASES_BEFORE   = config_obj.pop('aliases_before'  , ['spreadBefore'])
     ALIASES_AFTER    = config_obj.pop('aliases_after'   , ['spreadAfter', 'spread'])
+    ALIAS_SEPERATOR  = config_obj.pop('aliases_after'   , '-')
     DEFAULT_PERIOD   = config_obj.pop('default_period'  , 'Month')
     DEFAULT_METHOD   = config_obj.pop('default_method'  , 'SL')
     MIN_VALUE        = config_obj.pop('min_value'       , 0.05)
@@ -130,7 +132,8 @@ def spread(entries, options_map, config_string):
     for i, entry in enumerate(entries):
         if hasattr(entry, 'postings'):
             for j, p in enumerate(entry.postings):
-                params = get_params(ALIASES_AFTER, entry, p)  # TODO: ALIASES_BEFORE
+                # TODO: ALIASES_BEFORE
+                params = check_aliases_posting(ALIASES_AFTER, entry, p) or check_aliases_entry(ALIASES_AFTER, entry, ALIAS_SEPERATOR)
                 if not params:
                     continue
 
