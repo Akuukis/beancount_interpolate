@@ -15,46 +15,40 @@ from .parse_params import parse_params
 
 __plugins__ = ['split']
 
-def get_amounts(duration, posting, MIN_VALUE):
+def distribute_over_duration(max_duration, posting, MIN_VALUE):
     ## Distribute value over points. TODO: add new methods
+
     if(posting.units.number > 0):
         def round_to(n):
             return math.floor(n*100)/100
-        amountEach = (posting.units.number / duration)
     else:
         def round_to(n):
             return math.ceil(n*100)/100
-        amountEach = (posting.units.number / duration)
-    if(abs(amountEach) < abs(MIN_VALUE)):
+
+    if(abs(posting.units.number/max_duration) > abs(MIN_VALUE)):
+        amountEach = posting.units.number / max_duration
+        duration = max_duration
+    else:
         if(posting.units.number > 0):
             amountEach = MIN_VALUE
         else:
             amountEach = -MIN_VALUE
         duration = math.floor( abs(posting.units.number) / MIN_VALUE )
-    remainder = sub(posting.units, Amount( amountEach * duration, posting.units.currency) )
-
-
-    ## Double-check leg direction
-    if(posting.units.number > 0):
-        assert(remainder > Amount(D(str(-0.01)), posting.units.currency))
-    else:
-        assert(remainder < Amount(D(str(+0.01)), posting.units.currency))
 
     amounts = [];
-    accumulated_remainder = 0;
+    accumulated_remainder = D(str(0));
     for i in range(duration):
-        amount = Amount( D(str(round_to(amountEach + accumulated_remainder))), posting.units.currency )
-        accumulated_remainder += amountEach - amount.number
-        amounts.append( amount )
+        amounts.append(Amount( D(str(round_to(amountEach + accumulated_remainder))), posting.units.currency ))
+        accumulated_remainder += amountEach - amounts[len(amounts)-1].number
 
     return amounts
 
+
 def get_entries(duration, closing_dates, entry, MIN_VALUE):
-    new_transactions = []
 
     all_amounts = [];
     for posting in entry.postings:
-        all_amounts.append( get_amounts(duration, posting, MIN_VALUE) )
+        all_amounts.append( distribute_over_duration(duration, posting, MIN_VALUE) )
 
     max_duration = 0;
     for i in all_amounts:
@@ -64,31 +58,30 @@ def get_entries(duration, closing_dates, entry, MIN_VALUE):
     for amounts in all_amounts:
         firsts.append( abs(amounts[0].number) )
     accumulator = firsts.index(max(firsts))
-    remainder = D(str(0));
 
+    remainder = D(str(0));
+    new_transactions = []
     for i in range( min(len(closing_dates), max_duration) ):
         postings = []
 
         doublecheck = [];
         for p, posting in enumerate(entry.postings):
-            if i >= len(all_amounts[p]):
-                continue
-            doublecheck.append(all_amounts[p][i].number)
+            if i < len(all_amounts[p]):
+                doublecheck.append(all_amounts[p][i].number)
         should_be_zero = sum(doublecheck)
         if should_be_zero != 0:
             all_amounts[accumulator][i].number -= D(str(should_be_zero))
             remainder += should_be_zero
 
         for p, posting in enumerate(entry.postings):
-            if i >= len(all_amounts[p]):
-                continue
-            postings.append(data.Posting(
-                account=posting.account,
-                units=all_amounts[p][i],
-                cost=None,
-                price=None,
-                flag=posting.flag,
-                meta=None))
+            if i < len(all_amounts[p]):
+                postings.append(data.Posting(
+                    account=posting.account,
+                    units=all_amounts[p][i],
+                    cost=None,
+                    price=None,
+                    flag=posting.flag,
+                    meta=None))
 
         e = data.Transaction(
             date=closing_dates[i],
@@ -99,11 +92,9 @@ def get_entries(duration, closing_dates, entry, MIN_VALUE):
             tags={'split'}, # TODO: TAG
             links=entry.links,
             postings=postings)
-
         new_transactions.append(e)
+
     return new_transactions
-
-
 
 
 def split(entries, options_map, config_string):
@@ -141,8 +132,8 @@ def split(entries, options_map, config_string):
 
         trashbin.append(entry)
         start, duration = parse_params(params, entry.date)
-        dates = get_dates(start, duration, MAX_NEW_TX)
-        newEntries = newEntries + get_entries(duration, dates, entry, MIN_VALUE)
+        closing_dates = get_dates(start, duration, MAX_NEW_TX)
+        newEntries = newEntries + get_entries(duration, closing_dates, entry, MIN_VALUE)
 
     for trash in trashbin:
         entries.remove(trash)
