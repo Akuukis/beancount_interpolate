@@ -21,50 +21,44 @@ __plugins__ = ['spread']
 def get_entries(entry, selected_postings, params, MIN_VALUE, MAX_NEW_TX):
     all_amounts = []
     all_closing_dates = []
-    for posting in entry.postings:
-        if posting in selected_postings:
-            params = selected_postings[2]
-            total_duration, closing_dates = get_dates(params, entry.date, MAX_NEW_TX)
-            all_closing_dates.append(closing_dates)
-            all_amounts.append( distribute_over_duration(total_duration, posting.units.number, MIN_VALUE) )
-        else:
-            all_amounts.append( [] )
-            continue
+    for _ in entry.postings:
+        all_amounts.append([])
+        all_closing_dates.append([])
+
+    for p, _, params, posting in selected_postings:
+        total_duration, closing_dates = get_dates(params, entry.date, MAX_NEW_TX)
+        all_closing_dates[p] = closing_dates
+        all_amounts[p] = distribute_over_duration(total_duration, posting.units.number, MIN_VALUE)
 
     map_closing_dates = {}
     for closing_dates in all_closing_dates:
         for date in closing_dates:
-            map_closing_dates[date] = True
+            map_closing_dates[date] = []
 
-    merged_closing_dates = list(map_closing_dates.keys())
-    merged_closing_dates.sort()
+    for p, new_account, _, posting in selected_postings:
+        for i in range( min(len(all_closing_dates[p]), len(all_amounts[p])) ):
+            amount = Amount(all_amounts[p][i], posting.units.currency)
+            # Income/Expense to be spread
+            map_closing_dates[all_closing_dates[p][i]].append(data.Posting(account=posting.account,
+                              units=amount,
+                              cost=None,
+                              price=None,
+                              flag=posting.flag,
+                              meta=None))
+
+            # Asset/Liability that buffers the difference
+            map_closing_dates[all_closing_dates[p][i]].append(data.Posting(account=new_account,
+                              units=mul(amount, D(-1)),
+                              cost=None,
+                              price=None,
+                              flag=posting.flag,
+                              meta=None))
 
     new_transactions = []
-    for i in range(len(merged_closing_dates)):
-        postings = []
-
-        for p, new_account, _, posting in selected_postings:
-            if i < len(all_amounts[p]):
-                amount = Amount(all_amounts[p][i], posting.units.currency)
-                # Income/Expense to be spread
-                postings.append(data.Posting(account=posting.account,
-                                  units=amount,
-                                  cost=None,
-                                  price=None,
-                                  flag=posting.flag,
-                                  meta=None))
-
-                # Asset/Liability that buffers the difference
-                postings.append(data.Posting(account=new_account,
-                                  units=mul(amount, D(-1)),
-                                  cost=None,
-                                  price=None,
-                                  flag=posting.flag,
-                                  meta=None))
-
+    for date, postings in map_closing_dates.items():
         if len(postings) > 0:
             e = data.Transaction(
-                date=closing_dates[i],
+                date=date,
                 meta=entry.meta,
                 flag=entry.flag,
                 payee=entry.payee,
