@@ -70,11 +70,10 @@ def split(entries, options_map, config_string):
     config_obj = eval(config_string, {}, {})
     if not isinstance(config_obj, dict):
         raise RuntimeError("Invalid plugin configuration: should be a single dict.")
-    ALIASES_BEFORE   = config_obj.pop('aliases_before'  , ['splitBefore'])
+    # ALIASES_BEFORE   = config_obj.pop('aliases_before'  , ['splitBefore'])
     ALIASES_AFTER    = config_obj.pop('aliases_after'   , ['splitAfter', 'split'])
     ALIAS_SEPERATOR  = config_obj.pop('aliases_after'   , '-')
     DEFAULT_PERIOD   = config_obj.pop('default_period'  , 'Month')
-    DEFAULT_METHOD   = config_obj.pop('default_method'  , 'SL')
     MIN_VALUE        = config_obj.pop('min_value'       , 0.05)
     MAX_NEW_TX       = config_obj.pop('max_new_tx'      , 9999)
     SUFFIX           = config_obj.pop('suffix'          , ' (split %d/%d)')
