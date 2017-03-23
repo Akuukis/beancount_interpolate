@@ -78,11 +78,8 @@ def get_entries(entry, selected_postings, params, MIN_VALUE, MAX_NEW_TX):
 
 
 def spread(entries, options_map, config_string):
-    """Add depreciation entries for fixed assets.  See module docstring for more
-    details and example"""
     errors = []
 
-    ## Parse config and set defaults
     config_obj = eval(config_string, {}, {})
     if not isinstance(config_obj, dict):
         raise RuntimeError("Invalid plugin configuration: should be a single dict.")
@@ -103,7 +100,6 @@ def spread(entries, options_map, config_string):
         'Expenses': ACCOUNT_EXPENSES
     }
 
-    ## Filter transaction entries that have tag or meta or its posting has meta.
     newEntries = []
     for i, entry in enumerate(entries):
 

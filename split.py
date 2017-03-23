@@ -64,8 +64,6 @@ def get_entries(duration, closing_dates, entry, MIN_VALUE):
 
 
 def split(entries, options_map, config_string):
-    """Add depreciation entries for fixed assets.  See module docstring for more
-    details and example"""
     errors = []
 
     ## Parse config and set defaults
@@ -83,7 +81,6 @@ def split(entries, options_map, config_string):
     TAG              = config_obj.pop('tag'             , 'split')
     MIN_VALUE = D(str(MIN_VALUE))
 
-    ## Filter transaction entries that have tag or meta or its posting has meta.
     newEntries = []
     trashbin = []
     for i, entry in enumerate(entries):
