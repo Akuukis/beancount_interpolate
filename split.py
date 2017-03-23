@@ -94,7 +94,7 @@ def split(entries, options_map, config_string):
             continue
 
         trashbin.append(entry)
-        total_duration, closing_dates = get_dates(params, entry.date, MAX_NEW_TX)
+        total_duration, closing_dates = get_dates(params, entry.date, DEFAULT_PERIOD, MAX_NEW_TX)
         newEntries = newEntries + get_entries(total_duration, closing_dates, entry, MIN_VALUE, SUFFIX, TAG)
 
     for trash in trashbin:

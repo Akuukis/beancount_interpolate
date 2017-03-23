@@ -18,7 +18,7 @@ from .common_functions import longest_leg
 __plugins__ = ['spread']
 
 
-def get_entries(entry, selected_postings, params, MIN_VALUE, MAX_NEW_TX, SUFFIX, TAG):
+def get_entries(entry, selected_postings, params, DEFAULT_PERIOD, MIN_VALUE, MAX_NEW_TX, SUFFIX, TAG):
     all_amounts = []
     all_closing_dates = []
     for _ in entry.postings:
@@ -26,7 +26,7 @@ def get_entries(entry, selected_postings, params, MIN_VALUE, MAX_NEW_TX, SUFFIX,
         all_closing_dates.append([])
 
     for p, _, params, posting in selected_postings:
-        total_duration, closing_dates = get_dates(params, entry.date, MAX_NEW_TX)
+        total_duration, closing_dates = get_dates(params, entry.date, DEFAULT_PERIOD, MAX_NEW_TX)
         all_closing_dates[p] = closing_dates
         all_amounts[p] = distribute_over_duration(total_duration, posting.units.number, MIN_VALUE)
 
@@ -125,6 +125,6 @@ def spread(entries, options_map, config_string):
                 meta=None))
 
         if len(selected_postings) > 0:
-            newEntries = newEntries + get_entries(entry, selected_postings, params, MIN_VALUE, MAX_NEW_TX, SUFFIX, TAG)
+            newEntries = newEntries + get_entries(entry, selected_postings, params, DEFAULT_PERIOD, MIN_VALUE, MAX_NEW_TX, SUFFIX, TAG)
 
     return entries + newEntries, errors
