@@ -12,7 +12,6 @@ from beancount.core.number import ZERO, D, round_to
 from .check_aliases import check_aliases_entry
 from .check_aliases import check_aliases_posting
 from .get_dates import get_dates
-from .parse_params import parse_params
 
 __plugins__ = ['spread']
 
@@ -167,9 +166,8 @@ def spread(entries, options_map, config_string):
                 meta=None))
 
         for index, side, params, posting in selected_postings:
-            start, duration = parse_params(params, entry.date)
-            dates = get_dates(start, duration, MAX_NEW_TX)
-            if len(dates) > 0:
-                newEntries = newEntries + get_entries(duration, dates, new_account, posting, entry, MIN_VALUE)
+            total_duration, closing_dates = get_dates(params, entry.date, MAX_NEW_TX)
+            if len(closing_dates) > 0:
+                newEntries = newEntries + get_entries(total_duration, closing_dates, new_account, posting, entry, MIN_VALUE)
 
     return entries + newEntries, errors

@@ -11,7 +11,6 @@ from beancount.core.number import ZERO, D, round_to
 
 from .check_aliases import check_aliases_entry
 from .get_dates import get_dates
-from .parse_params import parse_params
 
 __plugins__ = ['split']
 
@@ -131,8 +130,7 @@ def split(entries, options_map, config_string):
             continue
 
         trashbin.append(entry)
-        start, total_duration = parse_params(params, entry.date)
-        closing_dates = get_dates(start, total_duration, MAX_NEW_TX)
+        total_duration, closing_dates = get_dates(params, entry.date, MAX_NEW_TX)
         newEntries = newEntries + get_entries(total_duration, closing_dates, entry, MIN_VALUE)
 
     for trash in trashbin:
