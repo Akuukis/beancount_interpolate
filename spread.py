@@ -21,10 +21,15 @@ __plugins__ = ['spread']
 def get_entries(entry, selected_postings, params, MIN_VALUE, MAX_NEW_TX):
     all_amounts = []
     all_closing_dates = []
-    for _, _, params, posting in selected_postings:
-        total_duration, closing_dates = get_dates(params, entry.date, MAX_NEW_TX)
-        all_closing_dates.append(closing_dates)
-        all_amounts.append( distribute_over_duration(total_duration, posting.units.number, MIN_VALUE) )
+    for posting in entry.postings:
+        if posting in selected_postings:
+            params = selected_postings[2]
+            total_duration, closing_dates = get_dates(params, entry.date, MAX_NEW_TX)
+            all_closing_dates.append(closing_dates)
+            all_amounts.append( distribute_over_duration(total_duration, posting.units.number, MIN_VALUE) )
+        else:
+            all_amounts.append( [] )
+            continue
 
     map_closing_dates = {}
     for closing_dates in all_closing_dates:
