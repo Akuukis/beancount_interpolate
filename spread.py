@@ -9,9 +9,11 @@ from beancount.core import data
 from beancount.core.position import Position
 from beancount.core.number import ZERO, D, round_to
 
-from .check_aliases import check_aliases_entry
-from .check_aliases import check_aliases_posting
-from .get_dates import get_dates
+from .common_functions import check_aliases_entry
+from .common_functions import check_aliases_posting
+from .common_functions import distribute_over_duration
+from .common_functions import get_dates
+from .common_functions import longest_leg
 
 __plugins__ = ['spread']
 
