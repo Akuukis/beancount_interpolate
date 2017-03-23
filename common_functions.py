@@ -64,12 +64,12 @@ def get_dates(params, default_date, MAX_NEW_TX):
         duration = int(parts[0])
     except:
         dictionary = {
-            'Day': 1,
-            'Week': 7,
-            'Month': 30,
-            'Year': 365
+            'day': 1,
+            'week': 7,
+            'month': 30,
+            'year': 365
         }
-        duration = dictionary[parts[0]]
+        duration = dictionary[parts[0].lower()]
 
     # Given a begin_date, find out all dates until today
     if(duration<=MAX_NEW_TX):  # TODO: MAX_NEW_TX
