@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
 	  name='beancount-interpolate',
-      version='0.9.2',
+      version='1.0.0',
       description='Interpolatation plugins for Beancount',
       url='https://github.com/Akuukis/beancount_interpolate',
       author='Kalvis \'Akuukis\' Kalnins',
