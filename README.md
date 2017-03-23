@@ -9,9 +9,12 @@ Plugins for Beancount to interpolate one entry into many **for smooth graphs**. 
 
 # Install
 
-Copy to path used for python. For example, `$HOME/.local/lib/python3.5/site-packages/beancount_interpolate` would do on Debian. If in doubt, look where `beancount` folder is and copy next to it.
+```
+pip3 install beancount-interpolate --user
+```
 
-Sublime Package Manager: TBD
+Or copy to path used for python. For example, `$HOME/.local/lib/python3.4/site-packages/beancount-interpolate/*` would do on Debian. If in doubt, look where `beancount` folder is and copy next to it.
+
 
 # Details
 
@@ -40,7 +43,7 @@ Copy/paste variables for plugin and edit for yourself.
 
 ```beancount
 ; Set defaults.
-plugin "beancount_interpolate.spread" "{
+plugin "beancount-interpolate.spread" "{
     'account_income': 'Liabilities:Current',
     'account_expenses': 'Assets:Current',
     'aliases_after': ['spreadAfter', 'spread'],
@@ -120,7 +123,7 @@ In fact, the argumentation is the same as in `spread`, but the only difference i
 ### How to use
 
 ```beancount
-plugin "beancount_interpolate.split" "{
+plugin "beancount-interpolate.split" "{
     'aliases_after': ['splitAfter', 'split'],
     'default_period': 'Month',
     'default_method': 'SL',
