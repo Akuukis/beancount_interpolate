@@ -72,35 +72,6 @@ def get_entries(entry, selected_postings, params, MIN_VALUE, MAX_NEW_TX):
     return new_transactions
 
 
-def edit_entry_accounts(entry, ACCOUNT_INCOME, ACCOUNT_EXPENSES):
-    """Modify original entry to replace Income/Expense with Liability/Asset"""
-    modified_postings = []
-    for i, posting in enumerate(entry.postings):
-        account = posting.account.split(':')
-        if(account[0] == 'Income'):
-            side = ACCOUNT_INCOME
-        elif(account[0] == 'Expenses'):
-            side = ACCOUNT_EXPENSES
-        else:
-            continue
-        account.pop(0)
-        account.insert(0, side)
-
-        new_account = ':'.join(account)
-        modified_postings.append( (i, new_account) )
-
-        entry.postings.pop(i)
-        entry.postings.insert(i, data.Posting(
-            account=new_account,
-            units=Amount(posting.units.number, posting.units.currency),
-            cost=None,
-            price=None,
-            flag=None,
-            meta=None))
-
-    return modified_postings
-
-
 def spread(entries, options_map, config_string):
     """Add depreciation entries for fixed assets.  See module docstring for more
     details and example"""
