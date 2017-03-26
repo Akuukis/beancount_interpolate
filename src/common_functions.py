@@ -110,7 +110,7 @@ def get_dates(params, default_date, config):
 
     dates = []
     d = begin_date
-    while d < begin_date + datetime.timedelta(days=period) and d <= datetime.date.today():
+    while d < begin_date + datetime.timedelta(days=duration) and d <= datetime.date.today():
         dates.append(d)
         d = d + datetime.timedelta(days=step)
 
