@@ -39,13 +39,15 @@ Possible solutions:
 
 ### How to use
 
-Copy/paste variables for plugin and edit for yourself.
+Copy/paste default variables for plugin and edit for yourself.
 
 ```beancount
 ; Set defaults.
 plugin "beancount-interpolate.spread" "{
-    'account_income': 'Liabilities:Current',
-    'account_expenses': 'Assets:Current',
+    'account_income': 'Income',
+    'account_expenses': 'Expenses',
+    'account_assets': 'Assets:Current',
+    'account_liab': 'Liabilities:Current',
     'aliases_after': ['spreadAfter', 'spread'],
     'default_period': 'Month',
     'default_method': 'SL',  # Straight Line

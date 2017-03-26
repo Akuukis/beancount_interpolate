@@ -77,8 +77,10 @@ def spread(entries, options_map, config_string):
     config_obj = eval(config_string, {}, {})
     if not isinstance(config_obj, dict):
         raise RuntimeError("Invalid plugin configuration: should be a single dict.")
-    ACCOUNT_INCOME   = config_obj.pop('account_income'  , 'Liabilities:Current')
-    ACCOUNT_EXPENSES = config_obj.pop('account_expenses', 'Assets:Current')
+    ACCOUNT_INCOME   = config_obj.pop('account_income'  , 'Income')
+    ACCOUNT_EXPENSES = config_obj.pop('account_expenses', 'Expenses')
+    ACCOUNT_ASSETS   = config_obj.pop('account_assets'  , 'Assets:Current')
+    ACCOUNT_LIAB     = config_obj.pop('account_liab'    , 'Liabilities:Current')
     # ALIASES_BEFORE   = config_obj.pop('aliases_before'  , ['spreadBefore'])
     ALIASES_AFTER    = config_obj.pop('aliases_after'   , ['spreadAfter', 'spread'])
     ALIAS_SEPERATOR  = config_obj.pop('aliases_after'   , '-')
@@ -88,10 +90,9 @@ def spread(entries, options_map, config_string):
     SUFFIX           = config_obj.pop('suffix'          , ' (spread %d/%d)')
     TAG              = config_obj.pop('tag'             , 'spreaded')
     MIN_VALUE = D(str(MIN_VALUE))
-    TRANSLATION = {
-        'Income': ACCOUNT_INCOME,
-        'Expenses': ACCOUNT_EXPENSES
-    }
+    TRANSLATIONS = {}
+    TRANSLATIONS[ACCOUNT_EXPENSES] = ACCOUNT_ASSETS
+    TRANSLATIONS[ACCOUNT_INCOME]   = ACCOUNT_LIAB
 
     newEntries = []
     for i, entry in enumerate(entries):
@@ -107,11 +108,12 @@ def spread(entries, options_map, config_string):
                   or False
             if not params:
                 continue
-            account = posting.account.split(':')
-            if not account[0] in TRANSLATION:
-                continue
-            new_account = TRANSLATION[account[0]]+':'+':'.join(account[1:])
-            selected_postings.append( (i, new_account, params, posting) )
+
+            for translation in TRANSLATIONS:
+                print(posting.account, translation, posting.account[0:len(translation)], posting.account[0:len(translation)] == translation)
+                if posting.account[0:len(translation)] == translation:
+                    new_account = translation + posting.account[len(translation):]
+                    selected_postings.append( (i, new_account, params, posting) )
 
         for i, new_account, params, posting in selected_postings:
             entry.postings.pop(i)
