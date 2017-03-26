@@ -24,7 +24,7 @@ def check_aliases_entry(entry, config):
     return False
 
 
-def distribute_over_duration(max_duration, total_value, config):
+def distribute_over_period(max_duration, total_value, config):
     ## Distribute value over points. TODO: add new methods
 
     if(total_value > 0):
@@ -53,7 +53,7 @@ def distribute_over_duration(max_duration, total_value, config):
     return amounts
 
 
-def get_period(int_or_string):
+def parse_length(int_or_string):
     try:
         return int(int_or_string)
     except:
@@ -88,22 +88,22 @@ def get_dates(params, default_date, config):
             begin_date = default_date
 
         if parts[0]:
-            duration = get_period(parts[0])
+            duration = parse_length(parts[0])
         else:
-            duration = get_period(config['default_period'])
+            duration = parse_length(config['default_duration'])
 
         if parts[4]:
-            step = get_period(parts[4])
+            step = parse_length(parts[4])
         else:
-            step = get_period(config['default_step'])
+            step = parse_length(config['default_step'])
 
     except Exception as e:
         # TODO: Error handling
         print('WARNING: Using defaults, because cannot parse params (%s): %s'%(str(params), str(e)))
 
         begin_date = default_date
-        step = get_period(config['default_step'])
-        duration = get_period(config['default_period'])
+        step = parse_length(config['default_step'])
+        duration = parse_length(config['default_duration'])
 
     period = math.floor( duration / step )
 
@@ -137,7 +137,7 @@ def new_filtered_entries(entry, selected_postings, params, config):
     for p, _, params, posting in selected_postings:
         total_periods, closing_dates = get_dates(params, entry.date, config)
         all_closing_dates[p] = closing_dates
-        all_amounts[p] = distribute_over_duration(total_periods, posting.units.number, config)
+        all_amounts[p] = distribute_over_period(total_periods, posting.units.number, config)
 
     map_closing_dates = {}
     for closing_dates in all_closing_dates:

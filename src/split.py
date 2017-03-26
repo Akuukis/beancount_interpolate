@@ -5,7 +5,7 @@ from beancount.core import data
 from beancount.core.number import D
 
 from .common_functions import check_aliases_entry
-from .common_functions import distribute_over_duration
+from .common_functions import distribute_over_period
 from .common_functions import get_dates
 from .common_functions import longest_leg
 
@@ -18,7 +18,7 @@ def get_entries(entry, params, config):
 
     all_amounts = [];
     for posting in entry.postings:
-        all_amounts.append( distribute_over_duration(period, posting.units.number, config) )
+        all_amounts.append( distribute_over_period(period, posting.units.number, config) )
 
     accumulator_index = longest_leg(all_amounts)
 
@@ -72,7 +72,7 @@ def split(entries, options_map, config_string):
         # ALIASES_BEFORE  : config_obj.pop('aliases_before'  , ['splitBefore']),
         'aliases_after'   : config_obj.pop('aliases_after'   , ['splitAfter', 'split']),
         'alias_seperator' : config_obj.pop('aliases_after'   , '-'),
-        'default_period'  : config_obj.pop('default_period'  , 'Month'),
+        'default_duration': config_obj.pop('default_duration', 'Month'),
         'default_step'    : config_obj.pop('default_step'    , 'Day'),
         'min_value' : D(str(config_obj.pop('min_value'       , 0.05))),
         'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),

@@ -6,9 +6,6 @@ from beancount.core.number import D
 
 from .common_functions import check_aliases_entry
 from .common_functions import check_aliases_posting
-from .common_functions import distribute_over_duration
-from .common_functions import get_dates
-from .common_functions import longest_leg
 from .common_functions import new_filtered_entries
 
 __plugins__ = ['spread']
@@ -24,7 +21,7 @@ def spread(entries, options_map, config_string):
       # aliases_before  : config_obj.pop('aliases_before'  , ['spreadBefore']),
         'aliases_after'   : config_obj.pop('aliases_after'   , ['spreadAfter', 'spread']),
         'alias_seperator' : config_obj.pop('seperator    '   , '-'),
-        'default_period'  : config_obj.pop('default_period'  , 'Month'),
+        'default_duration': config_obj.pop('default_duration', 'Month'),
         'default_step'    : config_obj.pop('default_step'    , 'Day'),
         'min_value' : D(str(config_obj.pop('min_value'       , 0.05))),
         'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),

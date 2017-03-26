@@ -51,7 +51,7 @@ plugin "beancount-interpolate.spread" "{
     'account_assets': 'Assets:Current',
     'account_liab': 'Liabilities:Current',
     'aliases_after': ['spreadAfter', 'spread'],
-    'default_period': 'Month',
+    'default_duration': 'Month',
     'default_step': 'Day',
     'default_method': 'SL',  # Straight Line
     'min_value': 0.05,  # cannot be smaller than 0.01
@@ -129,7 +129,7 @@ You want to make recurring entry every X days until forever (or some Y days have
 ```beancount
 plugin "beancount-interpolate.recur" "{
     'aliases_after': ['recurAfter', 'recur'],
-    'default_period': 'Infinite',
+    'default_duration': 'Infinite',
     'default_step': 'Day',
     'default_method': 'SL',
     'min_value': 0.05,
@@ -151,7 +151,7 @@ In fact, the argumentation is the same as in `spread`, but the only difference i
 ```beancount
 plugin "beancount-interpolate.split" "{
     'aliases_after': ['splitAfter', 'split'],
-    'default_period': 'Month',
+    'default_duration': 'Month',
     'default_step': 'Day',
     'default_method': 'SL',
     'min_value': 0.05,
@@ -219,7 +219,7 @@ plugin "beancount-interpolate.spread" "{
     'account_assets': 'Assets:Fixed',
     'account_liab': 'Liabilities:Fixed',
     'aliases_after': ['deprAfter', 'depr'],
-    'default_period': 'Year',
+    'default_duration': 'Year',
     'default_step': 'Day',
     'min_value': 0.05,  # cannot be smaller than 0.01
     'max_new_tx': 9999,

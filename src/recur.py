@@ -5,7 +5,6 @@ from beancount.core import data
 from beancount.core.number import D
 
 from .common_functions import check_aliases_entry
-from .common_functions import distribute_over_duration
 from .common_functions import get_dates
 from .common_functions import longest_leg
 
@@ -75,7 +74,7 @@ def recur(entries, options_map, config_string):
         # ALIASES_BEFORE  : config_obj.pop('aliases_before'  , ['recurBefore']),
         'aliases_after'   : config_obj.pop('aliases_after'   , ['recurAfter', 'recur']),
         'alias_seperator' : config_obj.pop('aliases_after'   , '-'),
-        'default_period'  : config_obj.pop('default_period'  , 'inf'),
+        'default_duration': config_obj.pop('default_duration', 'inf'),
         'default_step'    : config_obj.pop('default_step'    , 'Day'),
         'min_value' : D(str(config_obj.pop('min_value'       , 0.05))),
         'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),
