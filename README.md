@@ -50,6 +50,7 @@ plugin "beancount-interpolate.spread" "{
     'account_liab': 'Liabilities:Current',
     'aliases_after': ['spreadAfter', 'spread'],
     'default_period': 'Month',
+    'default_step': 'Day',
     'default_method': 'SL',  # Straight Line
     'min_value': 0.05,  # cannot be smaller than 0.01
     'max_new_tx': 9999,
@@ -128,6 +129,7 @@ In fact, the argumentation is the same as in `spread`, but the only difference i
 plugin "beancount-interpolate.split" "{
     'aliases_after': ['splitAfter', 'split'],
     'default_period': 'Month',
+    'default_step': 'Day',
     'default_method': 'SL',
     'min_value': 0.05,
     'max_new_tx': 9999,
@@ -195,6 +197,7 @@ plugin "beancount-interpolate.spread" "{
     'account_liab': 'Liabilities:Fixed',
     'aliases_after': ['deprAfter', 'depr'],
     'default_period': 'Year',
+    'default_step': 'Day',
     'min_value': 0.05,  # cannot be smaller than 0.01
     'max_new_tx': 9999,
     'suffix': ' (depr %d/%d)',

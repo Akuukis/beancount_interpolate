@@ -14,11 +14,11 @@ __plugins__ = ['split']
 
 def get_entries(entry, params, config):
 
-    duration, closing_dates = get_dates(params, entry.date, config)
+    period, closing_dates = get_dates(params, entry.date, config)
 
     all_amounts = [];
     for posting in entry.postings:
-        all_amounts.append( distribute_over_duration(duration, posting.units.number, config) )
+        all_amounts.append( distribute_over_duration(period, posting.units.number, config) )
 
     accumulator_index = longest_leg(all_amounts)
 
@@ -52,7 +52,7 @@ def get_entries(entry, params, config):
                 meta=entry.meta,
                 flag=entry.flag,
                 payee=entry.payee,
-                narration=entry.narration + config['suffix']%(i+1, duration),
+                narration=entry.narration + config['suffix']%(i+1, period),
                 tags={config['tag']},
                 links=entry.links,
                 postings=postings)
@@ -73,6 +73,7 @@ def split(entries, options_map, config_string):
         'aliases_after'   : config_obj.pop('aliases_after'   , ['splitAfter', 'split']),
         'alias_seperator' : config_obj.pop('aliases_after'   , '-'),
         'default_period'  : config_obj.pop('default_period'  , 'Month'),
+        'default_step'    : config_obj.pop('default_step'    , 'Day'),
         'min_value' : D(str(config_obj.pop('min_value'       , 0.05))),
         'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),
         'suffix'          : config_obj.pop('suffix'          , ' (split %d/%d)'),

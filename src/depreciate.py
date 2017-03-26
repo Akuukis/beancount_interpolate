@@ -23,6 +23,7 @@ def depreciate(entries, options_map, config_string):
         'aliases_after'   : config_obj.pop('aliases_after'   , ['deprAfter', 'depr']),
         'alias_seperator' : config_obj.pop('seperator    '   , '-'),
         'default_period'  : config_obj.pop('default_period'  , 'Year'),
+        'default_step'    : config_obj.pop('default_step'    , 'Day'),
         'min_value' : D(str(config_obj.pop('min_value'       , 0.05))),
         'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),
         'suffix'          : config_obj.pop('suffix'          , ' (depr %d/%d)'),

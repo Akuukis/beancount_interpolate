@@ -20,7 +20,7 @@ def check_aliases_entry(entry, config):
         if hasattr(entry, 'tags') and entry.tags:
             for tag in entry.tags:
                 if tag[0:len(alias+config['alias_seperator'])] == alias+config['alias_seperator'] or tag == alias:
-                    return tag[len(alias+config['alias_seperator']):] or True
+                    return tag[len(alias+config['alias_seperator']):] or ''
     return False
 
 
@@ -53,52 +53,68 @@ def distribute_over_duration(max_duration, total_value, config):
     return amounts
 
 
-def get_dates(params, default_date, config):
-    # Infer Duration, start and steps. Format: [123|KEYWORD] [@ YYYY-MM-DD]
+def get_period(int_or_string):
     try:
-        parts = re.findall("^(\s*?(\S+))?\s*?(@\s*?([0-9]{4})-([0-9]{2})-([0-9]{2}))?\s*?$", params)[0]
+        return int(int_or_string)
+    except:
+        pass
 
-        try:
-            begin_date = datetime.date(int(parts[3]), int(parts[4]), int(parts[5]))
-        except:
+    try:
+        dictionary = {
+            'day': 1,
+            'week': 7,
+            'month': 30,
+            'year': 365
+        }
+        return dictionary[int_or_string.lower()]
+    except:
+        pass
+
+    raise Exception('Invalid period: '+int_or_string)
+
+
+# Infer Duration, start and steps. Spacing optinonal. Format: [123|KEYWORD] [@ YYYY-MM[-DD]] [/ step]
+# 0. max duration, 1. year, 2. month, 3. day, 4. min step
+RE_PARSING = re.compile("^\s*?([^-/\s]+)?\s*?(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?\s*?(?:\/\s*?([^-/\s]+)?\s*?)?$")
+def get_dates(params, default_date, config):
+    try:
+        parts = re.findall(RE_PARSING, params)[0]
+        if parts[1] and parts[2]:
+            begin_date = datetime.date(int(parts[1]), int(parts[2]), int(parts[3]) or 1)
+        else:
             begin_date = default_date
 
-        try:
-            duration = int(parts[0])
-        except:
-                dictionary = {
-                    'day': 1,
-                    'week': 7,
-                    'month': 30,
-                    'year': 365
-                }
-                duration = dictionary[parts[0].lower()]
-    except:
-        begin_date = default_date
-        try:
-            duration = int(config['default_period'])
-        except:
-                dictionary = {
-                    'day': 1,
-                    'week': 7,
-                    'month': 30,
-                    'year': 365
-                }
-                duration = dictionary[config['default_period'].lower()]
+        if parts[0]:
+            duration = get_period(parts[0])
+        else:
+            duration = get_period(config['default_period'])
 
-    # Given a begin_date, find out all dates until today
-    if(duration<=config['max_new_tx']):  # TODO: MAX_NEW_TX
-        step = 1
-    else:
-        step = math.ceil(duration/config['max_new_tx'])
+        if parts[4]:
+            step = get_period(parts[4])
+        else:
+            step = get_period(config['default_step'])
+
+    except Exception as e:
+        # TODO: Error handling
+        print('WARNING: Using defaults, because cannot parse params (%s): %s'%(str(params), str(e)))
+
+        begin_date = default_date
+        step = get_period(config['default_step'])
+        duration = get_period(config['default_period'])
+
+    period = math.floor( duration / step )
+
+    if(period>config['max_new_tx']):
+        step = math.floor(duration/config['max_new_tx'])
+        duration = math.floor( get_period(config['default_period']) / step )
 
     dates = []
     d = begin_date
-    while d < begin_date + datetime.timedelta(days=duration) and d <= datetime.date.today():
+    while d < begin_date + datetime.timedelta(days=period) and d <= datetime.date.today():
         dates.append(d)
         d = d + datetime.timedelta(days=step)
 
-    return duration, dates
+    return period, dates
 
 
 def longest_leg(all_amounts):
@@ -116,9 +132,9 @@ def new_filtered_entries(entry, selected_postings, params, config):
         all_closing_dates.append([])
 
     for p, _, params, posting in selected_postings:
-        total_duration, closing_dates = get_dates(params, entry.date, config)
+        total_periods, closing_dates = get_dates(params, entry.date, config)
         all_closing_dates[p] = closing_dates
-        all_amounts[p] = distribute_over_duration(total_duration, posting.units.number, config)
+        all_amounts[p] = distribute_over_duration(total_periods, posting.units.number, config)
 
     map_closing_dates = {}
     for closing_dates in all_closing_dates:
@@ -152,7 +168,7 @@ def new_filtered_entries(entry, selected_postings, params, config):
                 meta=entry.meta,
                 flag=entry.flag,
                 payee=entry.payee,
-                narration=entry.narration + config['suffix']%(i+1, total_duration),
+                narration=entry.narration + config['suffix']%(i+1, total_periods),
                 tags={config['tag']},
                 links=entry.links,
                 postings=postings)
