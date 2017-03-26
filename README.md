@@ -1,13 +1,18 @@
 # Interpolate
 
-Plugins for Beancount to interpolate one entry into many **for smooth graphs**. Includes:
+Four plugins for double-entry accounting system Beancount to interpolate transactions by generating additional entries over time.
 
-* `split` - dublicates all entry postings over time with fraction of original value.
-* `recur` - dublicates all entry postings over time.
-* `spread` - generates new entries to spread *Income* or *Expense* postings over time (difference is accumulated and cleared against *Liabilities:Current* or *Assets:Current* accounts).
-* `depr` - generates new entries to spread *Assets:Fixed* or *Liabilities:Fixed* postings over time (difference is removed into either *Expenses:Depreciation* or *Income:Appreciation* accounts).
+They are:
+- `recur`: dublicates all entry postings over time
+- `split`: dublicates all entry postings over time at fraction of value
+- `depr`: generates new entries over time to depreciate source postings
+- `spread`: same as `depr` but for *Income* and *Expenses* postings
 
-> For tax-compatible yearly depreciation take a look at this [plugin](https://bitbucket.org/snippets/happyalu/EAMgj/beancount-automated-depreciation-plugin) by Alok Parlikar under MIT license.
+These plugins are triggered by adding metadata or tags to source entries. It's safe to disable at any time. All plugins share the same parser that can set maximal period, custom starting date and minimal step by either number or keyword.
+
+You can use these to define recurring transactions, account for depreciation, smooth transactions over time and make graphs less zig-zag.
+
+> This `depr` is not yet compatible with any accounting standards. For tax-compatible yearly depreciation take a look at this [plugin](https://bitbucket.org/snippets/happyalu/EAMgj/beancount-automated-depreciation-plugin) by Alok Parlikar under MIT license. All contributions to improve `depr` are welcome.
 
 # Install
 
