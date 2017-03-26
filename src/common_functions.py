@@ -64,7 +64,10 @@ def get_period(int_or_string):
             'day': 1,
             'week': 7,
             'month': 30,
-            'year': 365
+            'year': 365,
+            'inf': 365*1000000,
+            'infinite': 365*1000000,
+            'max': 365*1000000
         }
         return dictionary[int_or_string.lower()]
     except:
