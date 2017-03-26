@@ -175,3 +175,83 @@ Second, plugin inserts transactions every day until today, included.
 
 ...
 ```
+
+## Depreciate
+
+### Problem
+
+Depreciate technically is the same as spread but from other way around. But practically, you would like to have different settings for your short-term spreads and long-term depreciations.
+
+### How to use
+
+Copy/paste default variables for plugin and edit for yourself.
+
+```beancount
+; Set defaults.
+plugin "beancount-interpolate.spread" "{
+    'account_income': 'Income:Appreciation',
+    'account_expenses': 'Expenses:Depreciation',
+    'account_assets': 'Assets:Fixed',
+    'account_liab': 'Liabilities:Fixed',
+    'aliases_after': ['deprAfter', 'depr'],
+    'default_period': 'Year',
+    'min_value': 0.05,  # cannot be smaller than 0.01
+    'max_new_tx': 9999,
+    'suffix': ' (depr %d/%d)',
+    'tag': 'depred'
+}"
+```
+
+Add meta or tags to your transactions. All folllowing transactions does the same.
+
+```
+; Explicit.
+2016-06-15 * "CornerStore" "Bought new Laptop to do beancounting"
+    Assets:Fixed:PC                  199.00 EUR
+        depr: "Year @ 2016-06-15"
+    Assets:MyBank:Checking          -199.00 EUR
+
+; Transaction meta applies to all Assets:Fixed postings if depr is entry-wide.
+2016-06-15 * "CornerStore" "Bought new Laptop to do beancounting"
+    depr: "Year @ 2016-06-15"
+    Assets:Fixed:PC                  199.00 EUR
+    Assets:MyBank:Checking          -199.00 EUR
+
+
+; Use default period (Year).
+2016-06-15 * "CornerStore" "Bought new Laptop to do beancounting"
+    depr: "Year"
+    Assets:Fixed:PC                  199.00 EUR
+    Assets:MyBank:Checking          -199.00 EUR
+
+; Use date of transaction.
+2016-06-15 * "CornerStore" "Bought new Laptop to do beancounting"
+    depr: "Month"
+    Assets:Fixed:PC                  199.00 EUR
+    Assets:MyBank:Checking          -199.00 EUR
+
+; Use default period (Year) and default date (entry date).
+2016-06-15 * "CornerStore" "Bought new Laptop to do beancounting"
+    depr: "empty string or some nonsense"
+    Assets:Fixed:PC                  199.00 EUR
+    Assets:MyBank:Checking          -199.00 EUR
+
+; Use default period (Year) and default date (entry date) using a tag.
+2016-06-15 * "CornerStore" "Bought new Laptop to do beancounting" #depr
+    Assets:Fixed:PC                  199.00 EUR
+    Assets:MyBank:Checking          -199.00 EUR
+```
+
+### What happens
+
+Plugin inserts lots of transactions starting from given date until end (or today) like this:
+
+```
+2016-06-15 * "CornerStore" "Bought new Laptop to do beancounting (depr 1/365)" #depred
+    Assets:Fixed:PC                  -00.55 EUR
+    Expenses:Depreciation:PC          00.55 EUR
+
+2016-06-16 * "CornerStore" "Bought new Laptop to do beancounting (depr 2/365)" #depred
+    Assets:Fixed:PC                  -00.54 EUR
+    Expenses:Depreciation:PC          00.54 EUR
+```
