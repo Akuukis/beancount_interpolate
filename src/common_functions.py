@@ -4,25 +4,25 @@ import re
 from beancount.core.number import D
 
 
-def check_aliases_posting(aliases, posting):
-    for alias in aliases:
+def check_aliases_posting(posting, config):
+    for alias in config['aliases_after']:
         if hasattr(posting, 'meta') and posting.meta and alias in posting.meta:
             return posting.meta[alias]
     return False
 
 
-def check_aliases_entry(aliases, entry, seperator):
-    for alias in aliases:
+def check_aliases_entry(entry, config):
+    for alias in config['aliases_after']:
         if hasattr(entry, 'meta') and entry.meta and alias in entry.meta:
             return entry.meta[alias]
         if hasattr(entry, 'tags') and entry.tags:
             for tag in entry.tags:
-                if tag[0:len(alias+seperator)] == alias+seperator or tag == alias:
-                    return tag[len(alias+seperator):] or True
+                if tag[0:len(alias+config['alias_seperator'])] == alias+config['alias_seperator'] or tag == alias:
+                    return tag[len(alias+config['alias_seperator']):] or True
     return False
 
 
-def distribute_over_duration(max_duration, total_value, MIN_VALUE):
+def distribute_over_duration(max_duration, total_value, config):
     ## Distribute value over points. TODO: add new methods
 
     if(total_value > 0):
@@ -32,15 +32,15 @@ def distribute_over_duration(max_duration, total_value, MIN_VALUE):
         def round_to(n):
             return math.ceil(n*100)/100
 
-    if(abs(total_value/max_duration) > abs(MIN_VALUE)):
+    if(abs(total_value/max_duration) > abs(config['min_value'])):
         amountEach = total_value / max_duration
         duration = max_duration
     else:
         if(total_value > 0):
-            amountEach = MIN_VALUE
+            amountEach = config['min_value']
         else:
-            amountEach = -MIN_VALUE
-        duration = math.floor( abs(total_value) / MIN_VALUE )
+            amountEach = -config['min_value']
+        duration = math.floor( abs(total_value) / config['min_value'] )
 
     amounts = [];
     accumulated_remainder = D(str(0));
@@ -51,7 +51,7 @@ def distribute_over_duration(max_duration, total_value, MIN_VALUE):
     return amounts
 
 
-def get_dates(params, default_date, DEFAULT_PERIOD, MAX_NEW_TX):
+def get_dates(params, default_date, config):
     # Infer Duration, start and steps. Format: [123|KEYWORD] [@ YYYY-MM-DD]
     try:
         parts = re.findall("^(\s*?(\S+))?\s*?(@\s*?([0-9]{4})-([0-9]{2})-([0-9]{2}))?\s*?$", params)[0]
@@ -74,7 +74,7 @@ def get_dates(params, default_date, DEFAULT_PERIOD, MAX_NEW_TX):
     except:
         begin_date = default_date
         try:
-            duration = int(DEFAULT_PERIOD)
+            duration = int(config['default_period'])
         except:
                 dictionary = {
                     'day': 1,
@@ -82,13 +82,13 @@ def get_dates(params, default_date, DEFAULT_PERIOD, MAX_NEW_TX):
                     'month': 30,
                     'year': 365
                 }
-                duration = dictionary[DEFAULT_PERIOD.lower()]
+                duration = dictionary[config['default_period'].lower()]
 
     # Given a begin_date, find out all dates until today
-    if(duration<=MAX_NEW_TX):  # TODO: MAX_NEW_TX
+    if(duration<=config['max_new_tx']):  # TODO: MAX_NEW_TX
         step = 1
     else:
-        step = math.ceil(duration/MAX_NEW_TX)
+        step = math.ceil(duration/config['max_new_tx'])
 
     dates = []
     d = begin_date

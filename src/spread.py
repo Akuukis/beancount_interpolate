@@ -18,7 +18,7 @@ from .common_functions import longest_leg
 __plugins__ = ['spread']
 
 
-def get_entries(entry, selected_postings, params, DEFAULT_PERIOD, MIN_VALUE, MAX_NEW_TX, SUFFIX, TAG):
+def get_entries(entry, selected_postings, params, config):
     all_amounts = []
     all_closing_dates = []
     for _ in entry.postings:
@@ -26,9 +26,9 @@ def get_entries(entry, selected_postings, params, DEFAULT_PERIOD, MIN_VALUE, MAX
         all_closing_dates.append([])
 
     for p, _, params, posting in selected_postings:
-        total_duration, closing_dates = get_dates(params, entry.date, DEFAULT_PERIOD, MAX_NEW_TX)
+        total_duration, closing_dates = get_dates(params, entry.date, config)
         all_closing_dates[p] = closing_dates
-        all_amounts[p] = distribute_over_duration(total_duration, posting.units.number, MIN_VALUE)
+        all_amounts[p] = distribute_over_duration(total_duration, posting.units.number, config)
 
     map_closing_dates = {}
     for closing_dates in all_closing_dates:
@@ -62,8 +62,8 @@ def get_entries(entry, selected_postings, params, DEFAULT_PERIOD, MIN_VALUE, MAX
                 meta=entry.meta,
                 flag=entry.flag,
                 payee=entry.payee,
-                narration=entry.narration + SUFFIX%(i+1, total_duration),
-                tags={TAG},
+                narration=entry.narration + config['suffix']%(i+1, total_duration),
+                tags={config['tag']},
                 links=entry.links,
                 postings=postings)
             new_transactions.append(e)
@@ -77,22 +77,20 @@ def spread(entries, options_map, config_string):
     config_obj = eval(config_string, {}, {})
     if not isinstance(config_obj, dict):
         raise RuntimeError("Invalid plugin configuration: should be a single dict.")
-    ACCOUNT_INCOME   = config_obj.pop('account_income'  , 'Income')
-    ACCOUNT_EXPENSES = config_obj.pop('account_expenses', 'Expenses')
-    ACCOUNT_ASSETS   = config_obj.pop('account_assets'  , 'Assets:Current')
-    ACCOUNT_LIAB     = config_obj.pop('account_liab'    , 'Liabilities:Current')
-    # ALIASES_BEFORE   = config_obj.pop('aliases_before'  , ['spreadBefore'])
-    ALIASES_AFTER    = config_obj.pop('aliases_after'   , ['spreadAfter', 'spread'])
-    ALIAS_SEPERATOR  = config_obj.pop('aliases_after'   , '-')
-    DEFAULT_PERIOD   = config_obj.pop('default_period'  , 'Month')
-    MIN_VALUE        = config_obj.pop('min_value'       , 0.05)
-    MAX_NEW_TX       = config_obj.pop('max_new_tx'      , 9999)
-    SUFFIX           = config_obj.pop('suffix'          , ' (spread %d/%d)')
-    TAG              = config_obj.pop('tag'             , 'spreaded')
-    MIN_VALUE = D(str(MIN_VALUE))
-    TRANSLATIONS = {}
-    TRANSLATIONS[ACCOUNT_EXPENSES] = ACCOUNT_ASSETS
-    TRANSLATIONS[ACCOUNT_INCOME]   = ACCOUNT_LIAB
+    config = {
+      # aliases_before  : config_obj.pop('aliases_before'  , ['spreadBefore']),
+        'aliases_after'   : config_obj.pop('aliases_after'   , ['spreadAfter', 'spread']),
+        'alias_seperator' : config_obj.pop('seperator    '   , '-'),
+        'default_period'  : config_obj.pop('default_period'  , 'Month'),
+        'min_value' : D(str(config_obj.pop('min_value'       , 0.05))),
+        'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),
+        'suffix'          : config_obj.pop('suffix'          , ' (spread %d/%d)'),
+        'tag'             : config_obj.pop('tag'             , 'spreaded'),
+        'translations'    : {
+            config_obj.pop('account_expenses', 'Expenses'): config_obj.pop('account_assets'  , 'Assets:Current'),
+            config_obj.pop('account_income'  , 'Income')  : config_obj.pop('account_liab'    , 'Liabilities:Current'),
+        },
+    }
 
     newEntries = []
     for i, entry in enumerate(entries):
@@ -103,14 +101,13 @@ def spread(entries, options_map, config_string):
         selected_postings = []
         for i, posting in enumerate(entry.postings):
             # TODO: ALIASES_BEFORE
-            params = check_aliases_posting(ALIASES_AFTER, posting) \
-                  or check_aliases_entry(ALIASES_AFTER, entry, ALIAS_SEPERATOR) \
+            params = check_aliases_posting(posting, config) \
+                  or check_aliases_entry(entry, config) \
                   or False
             if not params:
                 continue
 
-            for translation in TRANSLATIONS:
-                print(posting.account, translation, posting.account[0:len(translation)], posting.account[0:len(translation)] == translation)
+            for translation in config['translations']:
                 if posting.account[0:len(translation)] == translation:
                     new_account = translation + posting.account[len(translation):]
                     selected_postings.append( (i, new_account, params, posting) )
@@ -126,6 +123,6 @@ def spread(entries, options_map, config_string):
                 meta=None))
 
         if len(selected_postings) > 0:
-            newEntries = newEntries + get_entries(entry, selected_postings, params, DEFAULT_PERIOD, MIN_VALUE, MAX_NEW_TX, SUFFIX, TAG)
+            newEntries = newEntries + get_entries(entry, selected_postings, params, config)
 
     return entries + newEntries, errors
