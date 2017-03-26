@@ -2,6 +2,8 @@ import datetime
 import math
 import re
 from beancount.core.number import D
+from beancount.core.amount import Amount, mul
+from beancount.core import data
 
 
 def check_aliases_posting(posting, config):
@@ -105,3 +107,55 @@ def longest_leg(all_amounts):
         firsts.append( abs(amounts[0]) )
     return firsts.index(max(firsts))
 
+
+def new_filtered_entries(entry, selected_postings, params, config):
+    all_amounts = []
+    all_closing_dates = []
+    for _ in entry.postings:
+        all_amounts.append([])
+        all_closing_dates.append([])
+
+    for p, _, params, posting in selected_postings:
+        total_duration, closing_dates = get_dates(params, entry.date, config)
+        all_closing_dates[p] = closing_dates
+        all_amounts[p] = distribute_over_duration(total_duration, posting.units.number, config)
+
+    map_closing_dates = {}
+    for closing_dates in all_closing_dates:
+        for date in closing_dates:
+            map_closing_dates[date] = []
+
+    for p, new_account, _, posting in selected_postings:
+        for i in range( min(len(all_closing_dates[p]), len(all_amounts[p])) ):
+            amount = Amount(all_amounts[p][i], posting.units.currency)
+            # Income/Expense to be spread
+            map_closing_dates[all_closing_dates[p][i]].append(data.Posting(account=new_account,
+                              units=amount,
+                              cost=None,
+                              price=None,
+                              flag=posting.flag,
+                              meta=None))
+
+            # Asset/Liability that buffers the difference
+            map_closing_dates[all_closing_dates[p][i]].append(data.Posting(account=posting.account,
+                              units=mul(amount, D(-1)),
+                              cost=None,
+                              price=None,
+                              flag=posting.flag,
+                              meta=None))
+
+    new_transactions = []
+    for date, postings in map_closing_dates.items():
+        if len(postings) > 0:
+            e = data.Transaction(
+                date=date,
+                meta=entry.meta,
+                flag=entry.flag,
+                payee=entry.payee,
+                narration=entry.narration + config['suffix']%(i+1, total_duration),
+                tags={config['tag']},
+                links=entry.links,
+                postings=postings)
+            new_transactions.append(e)
+
+    return new_transactions

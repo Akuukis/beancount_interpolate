@@ -1,13 +1,8 @@
 __author__ = 'Akuukis <akuukis@kalvis.lv'
 
-import datetime
-import re
-import math
-
-from beancount.core.amount import Amount, add, sub, mul, div
+from beancount.core.amount import Amount
 from beancount.core import data
-from beancount.core.position import Position
-from beancount.core.number import ZERO, D, round_to
+from beancount.core.number import D
 
 from .common_functions import check_aliases_entry
 from .common_functions import distribute_over_duration

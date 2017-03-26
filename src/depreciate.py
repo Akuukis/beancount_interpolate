@@ -1,74 +1,15 @@
 __author__ = 'Akuukis <akuukis@kalvis.lv'
 
-import datetime
-import re
-import math
-
-from beancount.core.amount import Amount, add, sub, mul, div
-from beancount.core import data
-from beancount.core.position import Position
-from beancount.core.number import ZERO, D, round_to
+from beancount.core.number import D
 
 from .common_functions import check_aliases_entry
 from .common_functions import check_aliases_posting
 from .common_functions import distribute_over_duration
 from .common_functions import get_dates
 from .common_functions import longest_leg
+from .common_functions import new_filtered_entries
 
 __plugins__ = ['depreciate']
-
-
-def get_entries(entry, selected_postings, params, config):
-    all_amounts = []
-    all_closing_dates = []
-    for _ in entry.postings:
-        all_amounts.append([])
-        all_closing_dates.append([])
-
-    for p, _, params, posting in selected_postings:
-        total_duration, closing_dates = get_dates(params, entry.date, config)
-        all_closing_dates[p] = closing_dates
-        all_amounts[p] = distribute_over_duration(total_duration, posting.units.number, config)
-
-    map_closing_dates = {}
-    for closing_dates in all_closing_dates:
-        for date in closing_dates:
-            map_closing_dates[date] = []
-
-    for p, new_account, _, posting in selected_postings:
-        for i in range( min(len(all_closing_dates[p]), len(all_amounts[p])) ):
-            amount = Amount(all_amounts[p][i], posting.units.currency)
-            # Income/Expense to be spread
-            map_closing_dates[all_closing_dates[p][i]].append(data.Posting(account=new_account,
-                              units=amount,
-                              cost=None,
-                              price=None,
-                              flag=posting.flag,
-                              meta=None))
-
-            # Asset/Liability that buffers the difference
-            map_closing_dates[all_closing_dates[p][i]].append(data.Posting(account=posting.account,
-                              units=mul(amount, D(-1)),
-                              cost=None,
-                              price=None,
-                              flag=posting.flag,
-                              meta=None))
-
-    new_transactions = []
-    for date, postings in map_closing_dates.items():
-        if len(postings) > 0:
-            e = data.Transaction(
-                date=date,
-                meta=entry.meta,
-                flag=entry.flag,
-                payee=entry.payee,
-                narration=entry.narration + config['suffix']%(i+1, total_duration),
-                tags={config['tag']},
-                links=entry.links,
-                postings=postings)
-            new_transactions.append(e)
-
-    return new_transactions
 
 
 def depreciate(entries, options_map, config_string):
@@ -124,6 +65,6 @@ def depreciate(entries, options_map, config_string):
         #         meta=None))
 
         if len(selected_postings) > 0:
-            newEntries = newEntries + get_entries(entry, selected_postings, params, config)
+            newEntries = newEntries + new_filtered_entries(entry, selected_postings, params, config)
 
     return entries + newEntries, errors
