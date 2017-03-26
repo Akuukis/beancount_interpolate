@@ -105,8 +105,8 @@ def get_dates(params, default_date, config):
     period = math.floor( duration / step )
 
     if(period>config['max_new_tx']):
-        step = math.floor(duration/config['max_new_tx'])
-        duration = math.floor( get_period(config['default_period']) / step )
+        period = config['max_new_tx']
+        duration = period * step
 
     dates = []
     d = begin_date
