@@ -53,17 +53,6 @@ def depreciate(entries, options_map, config_string):
                 if posting.account[0:len(translation)] == translation:
                     new_account = config['translations'][translation] + posting.account[len(translation):]
                     selected_postings.append( (i, new_account, params, posting) )
-                    print(posting.account, new_account)
-
-        # for i, new_account, params, posting in selected_postings:
-        #     entry.postings.pop(i)
-        #     entry.postings.insert(i, data.Posting(
-        #         account=new_account,
-        #         units=Amount(posting.units.number, posting.units.currency),
-        #         cost=None,
-        #         price=None,
-        #         flag=None,
-        #         meta=None))
 
         if len(selected_postings) > 0:
             newEntries = newEntries + new_filtered_entries(entry, selected_postings, params, config)
