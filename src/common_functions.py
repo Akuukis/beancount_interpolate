@@ -161,7 +161,7 @@ def new_filtered_entries(entry, selected_postings, params, config):
                               meta=None))
 
     new_transactions = []
-    for date, postings in map_closing_dates.items():
+    for i, (date, postings) in enumerate(sorted(map_closing_dates.items())):
         if len(postings) > 0:
             e = data.Transaction(
                 date=date,
