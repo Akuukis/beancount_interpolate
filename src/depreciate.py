@@ -5,6 +5,7 @@ from beancount.core.number import D
 from .common_functions import check_aliases_entry
 from .common_functions import check_aliases_posting
 from .common_functions import new_filtered_entries
+from .common_functions import distribute_over_period
 
 __plugins__ = ['depreciate']
 
@@ -52,6 +53,6 @@ def depreciate(entries, options_map, config_string):
                     selected_postings.append( (i, new_account, params, posting) )
 
         if len(selected_postings) > 0:
-            newEntries = newEntries + new_filtered_entries(entry, params, selected_postings, config)
+            newEntries = newEntries + new_filtered_entries(entry, params, distribute_over_period, selected_postings, config)
 
     return entries + newEntries, errors

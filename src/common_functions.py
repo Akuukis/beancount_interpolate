@@ -127,7 +127,7 @@ def longest_leg(all_amounts):
     return firsts.index(max(firsts))
 
 
-def new_filtered_entries(entry, params, selected_postings, config):
+def new_filtered_entries(entry, params, get_amounts, selected_postings, config):
     all_amounts = []
     all_closing_dates = []
     for _ in entry.postings:
@@ -137,7 +137,7 @@ def new_filtered_entries(entry, params, selected_postings, config):
     for p, _, params, posting in selected_postings:
         total_periods, closing_dates = get_dates(params, entry.date, config)
         all_closing_dates[p] = closing_dates
-        all_amounts[p] = distribute_over_period(total_periods, posting.units.number, config)
+        all_amounts[p] = get_amounts(total_periods, posting.units.number, config)
 
     map_closing_dates = {}
     for closing_dates in all_closing_dates:

@@ -7,8 +7,13 @@ from beancount.core.number import D
 from .common_functions import check_aliases_entry
 from .common_functions import check_aliases_posting
 from .common_functions import new_filtered_entries
+from .common_functions import distribute_over_period
 
 __plugins__ = ['spread']
+
+
+def distribute_over_period_negative(max_duration, total_value, config):
+    return distribute_over_period(max_duration, -total_value, config)
 
 
 def spread(entries, options_map, config_string):
@@ -64,6 +69,6 @@ def spread(entries, options_map, config_string):
                 meta=None))
 
         if len(selected_postings) > 0:
-            newEntries = newEntries + new_filtered_entries(entry, params, selected_postings, config)
+            newEntries = newEntries + new_filtered_entries(entry, params, distribute_over_period_negative, selected_postings, config)
 
     return entries + newEntries, errors
