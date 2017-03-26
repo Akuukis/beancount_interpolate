@@ -17,7 +17,10 @@ from .common_functions import longest_leg
 __plugins__ = ['split']
 
 
-def get_entries(duration, closing_dates, entry, config):
+def get_entries(entry, params, config):
+
+    duration, closing_dates = get_dates(params, entry.date, config)
+
     all_amounts = [];
     for posting in entry.postings:
         all_amounts.append( distribute_over_duration(duration, posting.units.number, config) )
@@ -94,8 +97,7 @@ def split(entries, options_map, config_string):
             continue
 
         trashbin.append(entry)
-        total_duration, closing_dates = get_dates(params, entry.date, config)
-        newEntries = newEntries + get_entries(total_duration, closing_dates, entry, config)
+        newEntries = newEntries + get_entries(entry, params, config)
 
     for trash in trashbin:
         entries.remove(trash)
