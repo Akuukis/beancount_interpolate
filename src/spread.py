@@ -64,6 +64,6 @@ def spread(entries, options_map, config_string):
                 meta=None))
 
         if len(selected_postings) > 0:
-            newEntries = newEntries + new_filtered_entries(entry, selected_postings, params, config)
+            newEntries = newEntries + new_filtered_entries(entry, params, selected_postings, config)
 
     return entries + newEntries, errors

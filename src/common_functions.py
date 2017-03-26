@@ -127,7 +127,7 @@ def longest_leg(all_amounts):
     return firsts.index(max(firsts))
 
 
-def new_filtered_entries(entry, selected_postings, params, config):
+def new_filtered_entries(entry, params, selected_postings, config):
     all_amounts = []
     all_closing_dates = []
     for _ in entry.postings:
@@ -172,6 +172,55 @@ def new_filtered_entries(entry, selected_postings, params, config):
                 flag=entry.flag,
                 payee=entry.payee,
                 narration=entry.narration + config['suffix']%(i+1, total_periods),
+                tags={config['tag']},
+                links=entry.links,
+                postings=postings)
+            new_transactions.append(e)
+
+    return new_transactions
+
+
+def new_whole_entries(entry, params, get_amounts, config):
+
+    period, closing_dates = get_dates(params, entry.date, config)
+
+    all_amounts = [];
+    for posting in entry.postings:
+        all_amounts.append( get_amounts(period, posting.units.number, config) )
+
+    accumulator_index = longest_leg(all_amounts)
+
+    remainder = D(str(0));
+    new_transactions = []
+    for i in range(len(closing_dates)):
+        postings = []
+
+        doublecheck = [];
+        for p, posting in enumerate(entry.postings):
+            if i < len(all_amounts[p]):
+                doublecheck.append(all_amounts[p][i])
+        should_be_zero = sum(doublecheck)
+        if should_be_zero != 0:
+            all_amounts[accumulator_index][i] -= D(str(should_be_zero))
+            remainder += should_be_zero
+
+        for p, posting in enumerate(entry.postings):
+            if i < len(all_amounts[p]):
+                postings.append(data.Posting(
+                    account=posting.account,
+                    units=Amount(all_amounts[p][i], posting.units.currency),
+                    cost=None,
+                    price=None,
+                    flag=posting.flag,
+                    meta=None))
+
+        if len(postings) > 0:
+            e = data.Transaction(
+                date=closing_dates[i],
+                meta=entry.meta,
+                flag=entry.flag,
+                payee=entry.payee,
+                narration=entry.narration + config['suffix']%(i+1, period),
                 tags={config['tag']},
                 links=entry.links,
                 postings=postings)

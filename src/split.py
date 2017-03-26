@@ -6,59 +6,9 @@ from beancount.core.number import D
 
 from .common_functions import check_aliases_entry
 from .common_functions import distribute_over_period
-from .common_functions import get_dates
-from .common_functions import longest_leg
+from .common_functions import new_whole_entries
 
 __plugins__ = ['split']
-
-
-def get_entries(entry, params, config):
-
-    period, closing_dates = get_dates(params, entry.date, config)
-
-    all_amounts = [];
-    for posting in entry.postings:
-        all_amounts.append( distribute_over_period(period, posting.units.number, config) )
-
-    accumulator_index = longest_leg(all_amounts)
-
-    remainder = D(str(0));
-    new_transactions = []
-    for i in range(len(closing_dates)):
-        postings = []
-
-        doublecheck = [];
-        for p, posting in enumerate(entry.postings):
-            if i < len(all_amounts[p]):
-                doublecheck.append(all_amounts[p][i])
-        should_be_zero = sum(doublecheck)
-        if should_be_zero != 0:
-            all_amounts[accumulator_index][i] -= D(str(should_be_zero))
-            remainder += should_be_zero
-
-        for p, posting in enumerate(entry.postings):
-            if i < len(all_amounts[p]):
-                postings.append(data.Posting(
-                    account=posting.account,
-                    units=Amount(all_amounts[p][i], posting.units.currency),
-                    cost=None,
-                    price=None,
-                    flag=posting.flag,
-                    meta=None))
-
-        if len(postings) > 0:
-            e = data.Transaction(
-                date=closing_dates[i],
-                meta=entry.meta,
-                flag=entry.flag,
-                payee=entry.payee,
-                narration=entry.narration + config['suffix']%(i+1, period),
-                tags={config['tag']},
-                links=entry.links,
-                postings=postings)
-            new_transactions.append(e)
-
-    return new_transactions
 
 
 def split(entries, options_map, config_string):
@@ -93,7 +43,7 @@ def split(entries, options_map, config_string):
             continue
 
         trashbin.append(entry)
-        newEntries = newEntries + get_entries(entry, params, config)
+        newEntries = newEntries + new_whole_entries(entry, params, distribute_over_period, config)
 
     for trash in trashbin:
         entries.remove(trash)

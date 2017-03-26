@@ -52,6 +52,6 @@ def depreciate(entries, options_map, config_string):
                     selected_postings.append( (i, new_account, params, posting) )
 
         if len(selected_postings) > 0:
-            newEntries = newEntries + new_filtered_entries(entry, selected_postings, params, config)
+            newEntries = newEntries + new_filtered_entries(entry, params, selected_postings, config)
 
     return entries + newEntries, errors
