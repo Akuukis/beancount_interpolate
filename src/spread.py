@@ -109,7 +109,7 @@ def spread(entries, options_map, config_string):
 
             for translation in config['translations']:
                 if posting.account[0:len(translation)] == translation:
-                    new_account = translation + posting.account[len(translation):]
+                    new_account = config['translations'][translation] + posting.account[len(translation):]
                     selected_postings.append( (i, new_account, params, posting) )
 
         for i, new_account, params, posting in selected_postings:
