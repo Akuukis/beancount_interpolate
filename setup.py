@@ -13,7 +13,7 @@ Four plugins for double-entry accounting system Beancount to interpolate transac
 - **recur**: dublicates all entry postings over time
 - **split**: dublicates all entry postings over time at fraction of value
 - **depr**: generates new entries over time to depreciate source postings
-- **spread**: same as **spread** but for *Income* and *Expenses* postings
+- **spread**: same as **depr** but for *Income* and *Expenses* postings
 
 These plugins are triggered by adding metadata or tags to source entries. It's safe to disable at any time. All plugins share the same parser that can set maximal period, custom starting date and minimal step by either number or keyword.
 
