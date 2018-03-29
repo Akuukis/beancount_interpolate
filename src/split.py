@@ -4,9 +4,9 @@ from beancount.core.amount import Amount
 from beancount.core import data
 from beancount.core.number import D
 
-from .common_functions import check_aliases_entry
-from .common_functions import distribute_over_period
-from .common_functions import new_whole_entries
+from .common import extract_mark_entry
+from .common import distribute_over_period
+from .common import new_whole_entries
 
 __plugins__ = ['split']
 
@@ -52,7 +52,7 @@ def split(entries, options_map, config_string):
         # Recur at entry level only, so that it balances.
 
         # We are interested in only marked entries. TODO: ALIASES_BEFORE.
-        params = check_aliases_entry(entry, config)
+        params = extract_mark_entry(entry, config)
         if not params:
             continue
 

@@ -6,7 +6,7 @@ from beancount.core.amount import Amount, mul
 from beancount.core import data
 
 
-def check_aliases_posting(posting, config):
+def extract_mark_posting(posting, config):
     """
     Extract mark from posting, if any.
 
@@ -23,7 +23,7 @@ def check_aliases_posting(posting, config):
     return False
 
 
-def check_aliases_entry(entry, config):
+def extract_mark_entry(entry, config):
     """
     Extract mark from entry, if any.
 
@@ -190,7 +190,7 @@ def new_filtered_entries(entry, params, get_amounts, selected_postings, config):
       entry: A transaction entry.
       params: A parser options dict.
       get_amounts: A function, i.e. distribute_over_period.
-      selected_postings: 
+      selected_postings: A list of postings.
       config: A configuration string in JSON format given in source file.
     Returns:
       A array of transaction entries.

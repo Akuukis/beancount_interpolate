@@ -2,10 +2,10 @@ __author__ = 'Akuukis <akuukis@kalvis.lv'
 
 from beancount.core.number import D
 
-from .common_functions import check_aliases_entry
-from .common_functions import check_aliases_posting
-from .common_functions import new_filtered_entries
-from .common_functions import distribute_over_period
+from .common import extract_mark_entry
+from .common import extract_mark_posting
+from .common import new_filtered_entries
+from .common import distribute_over_period
 
 __plugins__ = ['depreciate']
 
@@ -54,8 +54,8 @@ def depreciate(entries, options_map, config_string):
         selected_postings = []
         for i, posting in enumerate(entry.postings):
             # We are interested in only marked postings. TODO: ALIASES_BEFORE.
-            params = check_aliases_posting(posting, config) \
-                  or check_aliases_entry(entry, config) \
+            params = extract_mark_posting(posting, config) \
+                  or extract_mark_entry(entry, config) \
                   or False
             if not params:
                 continue
