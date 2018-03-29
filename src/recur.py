@@ -19,6 +19,17 @@ def dublicate_over_period(period, value, config):
 
 
 def recur(entries, options_map, config_string):
+    """
+    Beancount plugin: Dublicates all entry postings over time.
+
+    Args:
+      entries: A list of directives. We're interested only in the Transaction instances.
+      options_map: A parser options dict.
+      config_string: A configuration string in JSON format given in source file.
+    Returns:
+      A tuple of entries and errors.
+    """
+
     errors = []
 
     ## Parse config and set defaults
@@ -41,14 +52,18 @@ def recur(entries, options_map, config_string):
     trashbin = []
     for i, entry in enumerate(entries):
 
+        # We are interested only in Transaction entries.
         if not hasattr(entry, 'postings'):
             continue
 
-        # TODO: ALIASES_BEFORE
+        # Recur at entry level only, so that it balances.
+
+        # We are interested in only marked entries. TODO: ALIASES_BEFORE.
         params = check_aliases_entry(entry, config)
         if not params:
             continue
 
+        # For selected entries add new entries.
         trashbin.append(entry)
         newEntries = newEntries + new_whole_entries(entry, params, dublicate_over_period, config)
 

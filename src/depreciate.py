@@ -11,6 +11,17 @@ __plugins__ = ['depreciate']
 
 
 def depreciate(entries, options_map, config_string):
+    """
+    Beancount plugin: Generates new entries to depreciate target posting over given period.
+
+    Args:
+      entries: A list of directives. We're interested only in the Transaction instances.
+      options_map: A parser options dict.
+      config_string: A configuration string in JSON format given in source file.
+    Returns:
+      A tuple of entries and errors.
+    """
+
     errors = []
 
     config_obj = eval(config_string, {}, {})
@@ -35,12 +46,14 @@ def depreciate(entries, options_map, config_string):
     newEntries = []
     for i, entry in enumerate(entries):
 
+        # We are interested only in Transaction entries.
         if not hasattr(entry, 'postings'):
             continue
 
+        # Spread at posting level because not all account types may be eligible.
         selected_postings = []
         for i, posting in enumerate(entry.postings):
-            # TODO: ALIASES_BEFORE
+            # We are interested in only marked postings. TODO: ALIASES_BEFORE.
             params = check_aliases_posting(posting, config) \
                   or check_aliases_entry(entry, config) \
                   or False
@@ -52,6 +65,10 @@ def depreciate(entries, options_map, config_string):
                     new_account = config['translations'][translation] + posting.account[len(translation):]
                     selected_postings.append( (i, new_account, params, posting) )
 
+        # For selected postings no need to change the original.
+        pass
+
+        # For selected postings add new postings bundled into entries.
         if len(selected_postings) > 0:
             newEntries = newEntries + new_filtered_entries(entry, params, distribute_over_period, selected_postings, config)
 

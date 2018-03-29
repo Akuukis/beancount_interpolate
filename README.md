@@ -5,8 +5,9 @@ Four plugins for double-entry accounting system Beancount to interpolate transac
 They are:
 - `recur`: dublicates all entry postings over time
 - `split`: dublicates all entry postings over time at fraction of value
-- `depr`: generates new entries over time to depreciate source postings
+- `depr`: generates new entries to depreciate target posting over given period
 - `spread`: same as `depr` but for *Income* and *Expenses* postings
+- `spread`: generate new entries to allocate P&L of target income/expense posting over given period
 
 These plugins are triggered by adding metadata or tags to source entries. It's safe to disable at any time. All plugins share the same parser that can set maximal period, custom starting date and minimal step by either number or keyword.
 
@@ -286,3 +287,9 @@ Plugin inserts lots of transactions starting from given date until end (or today
     Assets:Fixed:PC                  -00.54 EUR
     Expenses:Depreciation:PC          00.54 EUR
 ```
+
+# Development
+
+The source contains five files - one per plugin and commons. Plugins have very similar structure in pairs: spread is similar to depreciate, and recur is similar to split.
+
+Documentation is inline.

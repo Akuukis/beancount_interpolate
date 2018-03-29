@@ -17,6 +17,17 @@ def distribute_over_period_negative(max_duration, total_value, config):
 
 
 def spread(entries, options_map, config_string):
+    """
+    Beancount plugin: Generate new entries to allocate P&L of target income/expense posting over given period.
+
+    Args:
+      entries: A list of directives. We're interested only in the Transaction instances.
+      options_map: A parser options dict.
+      config_string: A configuration string in JSON format given in source file.
+    Returns:
+      A tuple of entries and errors.
+    """
+
     errors = []
 
     config_obj = eval(config_string, {}, {})
@@ -41,12 +52,14 @@ def spread(entries, options_map, config_string):
     newEntries = []
     for i, entry in enumerate(entries):
 
+        # We are interested only in Transaction entries.
         if not hasattr(entry, 'postings'):
             continue
 
+        # Spread at posting level because not all account types may be eligible.
         selected_postings = []
         for i, posting in enumerate(entry.postings):
-            # TODO: ALIASES_BEFORE
+            # We are interested in only marked postings. TODO: ALIASES_BEFORE.
             params = check_aliases_posting(posting, config) \
                   or check_aliases_entry(entry, config) \
                   or False
@@ -58,6 +71,7 @@ def spread(entries, options_map, config_string):
                     new_account = config['translations'][translation] + posting.account[len(translation):]
                     selected_postings.append( (i, new_account, params, posting) )
 
+        # For selected postings change the original.
         for i, new_account, params, posting in selected_postings:
             entry.postings.pop(i)
             entry.postings.insert(i, data.Posting(
@@ -68,6 +82,7 @@ def spread(entries, options_map, config_string):
                 flag=None,
                 meta=None))
 
+        # For selected postings add new postings bundled into entries.
         if len(selected_postings) > 0:
             newEntries = newEntries + new_filtered_entries(entry, params, distribute_over_period_negative, selected_postings, config)
 

@@ -7,6 +7,16 @@ from beancount.core import data
 
 
 def check_aliases_posting(posting, config):
+    """
+    Extract mark from posting, if any.
+
+    Args:
+        posting: posting.
+        config: A configuration string in JSON format given in source file.
+    Returns:
+        string of mark or False.
+    """
+
     for alias in config['aliases_after']:
         if hasattr(posting, 'meta') and posting.meta and alias in posting.meta:
             return posting.meta[alias]
@@ -14,6 +24,16 @@ def check_aliases_posting(posting, config):
 
 
 def check_aliases_entry(entry, config):
+    """
+    Extract mark from entry, if any.
+
+    Args:
+        entry: transaction entry.
+        config: A configuration string in JSON format given in source file.
+    Returns:
+        string of mark or False.
+    """
+
     for alias in config['aliases_after']:
         if hasattr(entry, 'meta') and entry.meta and alias in entry.meta:
             return entry.meta[alias]
@@ -25,7 +45,16 @@ def check_aliases_entry(entry, config):
 
 
 def distribute_over_period(max_duration, total_value, config):
-    ## Distribute value over points. TODO: add new methods
+    """
+    Distribute value over points in time.
+
+    Args:
+        max_duration: integer of duration.
+        total_value: decimal of total value.
+        config: A configuration string in JSON format given in source file.
+    Returns:
+        A list of decimals that sums up to total_value and is lenght of max_duration.
+    """
 
     if(total_value > 0):
         def round_to(n):
@@ -54,6 +83,14 @@ def distribute_over_period(max_duration, total_value, config):
 
 
 def parse_length(int_or_string):
+    """
+    Parses length value or keywords into value.
+
+    Args:
+        int_or_string: string with number or keyword.
+    Returns:
+        A integer.
+    """
     try:
         return int(int_or_string)
     except:
@@ -63,8 +100,8 @@ def parse_length(int_or_string):
         dictionary = {
             'day': 1,
             'week': 7,
-            'month': 30,
-            'year': 365,
+            'month': 30,  # TODO.
+            'year': 365,  # TODO.
             'inf': 365*1000000,
             'infinite': 365*1000000,
             'max': 365*1000000
@@ -78,8 +115,18 @@ def parse_length(int_or_string):
 
 # Infer Duration, start and steps. Spacing optinonal. Format: [123|KEYWORD] [@ YYYY-MM[-DD]] [/ step]
 # 0. max duration, 1. year, 2. month, 3. day, 4. min step
-RE_PARSING = re.compile("^\s*?([^-/\s]+)?\s*?(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?\s*?(?:\/\s*?([^-/\s]+)?\s*?)?$")
+RE_PARSING = re.compile(r"^\s*?([^-/\s]+)?\s*?(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?\s*?(?:\/\s*?([^-/\s]+)?\s*?)?$")
 def get_dates(params, default_date, config):
+    """
+    Find the longest leg between amounts.
+
+    Args:
+        params: string of period.
+        default_date: date to fallback to.
+        config: A configuration string in JSON format given in source file.
+    Returns:
+        A tuple of period and dates.
+    """
     try:
         parts = re.findall(RE_PARSING, params)[0]
         if parts[1] and parts[2]:
@@ -117,10 +164,18 @@ def get_dates(params, default_date, config):
         dates.append(d)
         d = d + datetime.timedelta(days=step)
 
-    return period, dates
+    return (period, dates)
 
 
 def longest_leg(all_amounts):
+    """
+    Find the longest leg between amounts.
+
+    Args:
+        all_amounts: list of amounts.
+    Returns:
+        index of logest leg.
+    """
     firsts = []
     for amounts in all_amounts:
         firsts.append( abs(amounts[0]) )
@@ -128,6 +183,19 @@ def longest_leg(all_amounts):
 
 
 def new_filtered_entries(entry, params, get_amounts, selected_postings, config):
+    """
+    Beancount plugin: Dublicates all entry postings over time.
+
+    Args:
+      entry: A transaction entry.
+      params: A parser options dict.
+      get_amounts: A function, i.e. distribute_over_period.
+      selected_postings: 
+      config: A configuration string in JSON format given in source file.
+    Returns:
+      A array of transaction entries.
+    """
+
     all_amounts = []
     all_closing_dates = []
     for _ in entry.postings:
