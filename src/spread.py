@@ -12,8 +12,8 @@ from .common import distribute_over_period
 __plugins__ = ['spread']
 
 
-def distribute_over_period_negative(max_duration, total_value, config):
-    return distribute_over_period(max_duration, -total_value, config)
+def distribute_over_period_negative(params, default_date, total_value, config):
+    return distribute_over_period(params, default_date, -total_value, config)
 
 
 def spread(entries, options_map, config_string):
