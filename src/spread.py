@@ -1,7 +1,8 @@
 __author__ = 'Akuukis <akuukis@kalvis.lv'
 
 from beancount.core.amount import Amount
-from beancount.core import data
+from beancount.core.data import filter_txns
+from beancount.core.data import Posting
 from beancount.core.number import D
 
 from .common import extract_mark_entry
@@ -50,11 +51,7 @@ def spread(entries, options_map, config_string):
     }
 
     newEntries = []
-    for i, entry in enumerate(entries):
-
-        # We are interested only in Transaction entries.
-        if not hasattr(entry, 'postings'):
-            continue
+    for entry in filter_txns(entries):
 
         # Spread at posting level because not all account types may be eligible.
         selected_postings = []
@@ -74,7 +71,7 @@ def spread(entries, options_map, config_string):
         # For selected postings change the original.
         for i, new_account, params, posting in selected_postings:
             entry.postings.pop(i)
-            entry.postings.insert(i, data.Posting(
+            entry.postings.insert(i, Posting(
                 account=new_account,
                 units=Amount(posting.units.number, posting.units.currency),
                 cost=None,

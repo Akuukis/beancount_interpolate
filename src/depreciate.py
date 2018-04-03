@@ -1,6 +1,7 @@
 __author__ = 'Akuukis <akuukis@kalvis.lv'
 
 from beancount.core.number import D
+from beancount.core.data import filter_txns
 
 from .common import extract_mark_entry
 from .common import extract_mark_posting
@@ -44,11 +45,7 @@ def depreciate(entries, options_map, config_string):
     }
 
     newEntries = []
-    for i, entry in enumerate(entries):
-
-        # We are interested only in Transaction entries.
-        if not hasattr(entry, 'postings'):
-            continue
+    for entry in filter_txns(entries):
 
         # Spread at posting level because not all account types may be eligible.
         selected_postings = []

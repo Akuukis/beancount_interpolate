@@ -1,7 +1,7 @@
 __author__ = 'Akuukis <akuukis@kalvis.lv'
 
 from beancount.core.amount import Amount
-from beancount.core import data
+from beancount.core.data import filter_txns
 from beancount.core.number import D
 
 from .common import extract_mark_entry
@@ -50,13 +50,10 @@ def recur(entries, options_map, config_string):
 
     newEntries = []
     trashbin = []
-    for i, entry in enumerate(entries):
-
-        # We are interested only in Transaction entries.
-        if not hasattr(entry, 'postings'):
-            continue
+    for entry in filter_txns(entries):
 
         # Recur at entry level only, so that it balances.
+        pass
 
         # We are interested in only marked entries. TODO: ALIASES_BEFORE.
         params = extract_mark_entry(entry, config)
