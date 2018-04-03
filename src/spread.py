@@ -5,7 +5,7 @@ from beancount.core.data import filter_txns
 from beancount.core.data import Posting
 from beancount.core.number import D
 
-from .common import extract_mark_entry
+from .common import extract_mark_tx
 from .common import extract_mark_posting
 from .common import new_filtered_entries
 from .common import distribute_over_period
@@ -51,14 +51,14 @@ def spread(entries, options_map, config_string):
     }
 
     newEntries = []
-    for entry in filter_txns(entries):
+    for tx in filter_txns(entries):
 
         # Spread at posting level because not all account types may be eligible.
         selected_postings = []
-        for i, posting in enumerate(entry.postings):
+        for i, posting in enumerate(tx.postings):
             # We are interested in only marked postings. TODO: ALIASES_BEFORE.
             params = extract_mark_posting(posting, config) \
-                  or extract_mark_entry(entry, config) \
+                  or extract_mark_tx(tx, config) \
                   or False
             if not params:
                 continue
@@ -70,8 +70,8 @@ def spread(entries, options_map, config_string):
 
         # For selected postings change the original.
         for i, new_account, params, posting in selected_postings:
-            entry.postings.pop(i)
-            entry.postings.insert(i, Posting(
+            tx.postings.pop(i)
+            tx.postings.insert(i, Posting(
                 account=new_account,
                 units=Amount(posting.units.number, posting.units.currency),
                 cost=None,
@@ -81,6 +81,6 @@ def spread(entries, options_map, config_string):
 
         # For selected postings add new postings bundled into entries.
         if len(selected_postings) > 0:
-            newEntries = newEntries + new_filtered_entries(entry, params, distribute_over_period_negative, selected_postings, config)
+            newEntries = newEntries + new_filtered_entries(tx, params, distribute_over_period_negative, selected_postings, config)
 
     return entries + newEntries, errors

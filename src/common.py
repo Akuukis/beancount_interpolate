@@ -23,22 +23,22 @@ def extract_mark_posting(posting, config):
     return False
 
 
-def extract_mark_entry(entry, config):
+def extract_mark_tx(tx, config):
     """
-    Extract mark from entry, if any.
+    Extract mark from transaction, if any.
 
     Args:
-        entry: transaction entry.
+        tx: transaction instance.
         config: A configuration string in JSON format given in source file.
     Returns:
         string of mark or False.
     """
 
     for alias in config['aliases_after']:
-        if hasattr(entry, 'meta') and entry.meta and alias in entry.meta:
-            return entry.meta[alias]
-        if hasattr(entry, 'tags') and entry.tags:
-            for tag in entry.tags:
+        if hasattr(tx, 'meta') and tx.meta and alias in tx.meta:
+            return tx.meta[alias]
+        if hasattr(tx, 'tags') and tx.tags:
+            for tag in tx.tags:
                 if tag[0:len(alias+config['alias_seperator'])] == alias+config['alias_seperator'] or tag == alias:
                     return tag[len(alias+config['alias_seperator']):] or ''
     return False
@@ -169,12 +169,12 @@ def longest_leg(all_amounts):
     return firsts.index(max(firsts))
 
 
-def new_filtered_entries(entry, params, get_amounts, selected_postings, config):
+def new_filtered_entries(tx, params, get_amounts, selected_postings, config):
     """
-    Beancount plugin: Dublicates all entry postings over time.
+    Beancount plugin: Dublicates all transaction's postings over time.
 
     Args:
-      entry: A transaction entry.
+      tx: A transaction instance.
       params: A parser options dict.
       get_amounts: A function, i.e. distribute_over_period.
       selected_postings: A list of postings.
@@ -185,12 +185,12 @@ def new_filtered_entries(entry, params, get_amounts, selected_postings, config):
 
     all_amounts = []
     all_closing_dates = []
-    for _ in entry.postings:
+    for _ in tx.postings:
         all_amounts.append([])
         all_closing_dates.append([])
 
     for p, _, params, posting in selected_postings:
-        dates, amounts = get_amounts(params, entry.date, posting.units.number, config)
+        dates, amounts = get_amounts(params, tx.date, posting.units.number, config)
         all_closing_dates[p] = dates
         all_amounts[p] = amounts
 
@@ -223,24 +223,24 @@ def new_filtered_entries(entry, params, get_amounts, selected_postings, config):
         if len(postings) > 0:
             e = data.Transaction(
                 date=date,
-                meta=entry.meta,
-                flag=entry.flag,
-                payee=entry.payee,
-                narration=entry.narration + config['suffix']%(i+1, len(closing_dates)),
+                meta=tx.meta,
+                flag=tx.flag,
+                payee=tx.payee,
+                narration=tx.narration + config['suffix']%(i+1, len(closing_dates)),
                 tags={config['tag']},
-                links=entry.links,
+                links=tx.links,
                 postings=postings)
             new_transactions.append(e)
 
     return new_transactions
 
 
-def new_whole_entries(entry, params, get_amounts, config):
+def new_whole_entries(tx, params, get_amounts, config):
 
 
     all_amounts = [];
-    for posting in entry.postings:
-        closing_dates, amounts = get_amounts(params, entry.date, posting.units.number, config)
+    for posting in tx.postings:
+        closing_dates, amounts = get_amounts(params, tx.date, posting.units.number, config)
         all_amounts.append( amounts )
 
     accumulator_index = longest_leg(all_amounts)
@@ -251,7 +251,7 @@ def new_whole_entries(entry, params, get_amounts, config):
         postings = []
 
         doublecheck = [];
-        for p, posting in enumerate(entry.postings):
+        for p, posting in enumerate(tx.postings):
             if i < len(all_amounts[p]):
                 doublecheck.append(all_amounts[p][i])
         should_be_zero = sum(doublecheck)
@@ -259,7 +259,7 @@ def new_whole_entries(entry, params, get_amounts, config):
             all_amounts[accumulator_index][i] -= D(str(should_be_zero))
             remainder += should_be_zero
 
-        for p, posting in enumerate(entry.postings):
+        for p, posting in enumerate(tx.postings):
             if i < len(all_amounts[p]):
                 postings.append(data.Posting(
                     account=posting.account,
@@ -272,12 +272,12 @@ def new_whole_entries(entry, params, get_amounts, config):
         if len(postings) > 0:
             e = data.Transaction(
                 date=closing_dates[i],
-                meta=entry.meta,
-                flag=entry.flag,
-                payee=entry.payee,
-                narration=entry.narration + config['suffix']%(i+1, len(closing_dates)),
+                meta=tx.meta,
+                flag=tx.flag,
+                payee=tx.payee,
+                narration=tx.narration + config['suffix']%(i+1, len(closing_dates)),
                 tags={config['tag']},
-                links=entry.links,
+                links=tx.links,
                 postings=postings)
             new_transactions.append(e)
 

@@ -4,7 +4,7 @@ from beancount.core.amount import Amount
 from beancount.core.data import filter_txns
 from beancount.core.number import D
 
-from .common import extract_mark_entry
+from .common import extract_mark_tx
 from .common import new_whole_entries
 
 __plugins__ = ['recur']
@@ -50,19 +50,19 @@ def recur(entries, options_map, config_string):
 
     newEntries = []
     trashbin = []
-    for entry in filter_txns(entries):
+    for tx in filter_txns(entries):
 
         # Recur at entry level only, so that it balances.
         pass
 
         # We are interested in only marked entries. TODO: ALIASES_BEFORE.
-        params = extract_mark_entry(entry, config)
+        params = extract_mark_tx(tx, config)
         if not params:
             continue
 
         # For selected entries add new entries.
-        trashbin.append(entry)
-        newEntries = newEntries + new_whole_entries(entry, params, dublicate_over_period, config)
+        trashbin.append(tx)
+        newEntries = newEntries + new_whole_entries(tx, params, dublicate_over_period, config)
 
     for trash in trashbin:
         entries.remove(trash)
