@@ -6,6 +6,8 @@ from beancount.core.amount import Amount, mul
 from beancount.core.data import Transaction
 from beancount.core.data import Posting
 
+def round_to(n):
+    return round(n*100)/100
 
 def extract_mark_posting(posting, config):
     """
@@ -88,40 +90,27 @@ def distribute_over_period(params, default_date, total_value, config):
 
     period = math.floor( duration / step )
 
-    if(period>config['max_new_tx']):
+    if(period > config['max_new_tx']):
         period = config['max_new_tx']
         duration = period * step
 
     dates = []
-    d = begin_date
-    while d < begin_date + datetime.timedelta(days=duration) and d <= datetime.date.today():
-        dates.append(d)
-        d = d + datetime.timedelta(days=step)
+    amounts = []
+    date = begin_date
+    accumulated_remainder = D(str(0))
 
-    if(total_value > 0):
-        def round_to(n):
-            return math.floor(n*100)/100
-    else:
-        def round_to(n):
-            return math.ceil(n*100)/100
+    while date < begin_date + datetime.timedelta(days=duration) and date <= datetime.date.today():
+        accumulated_remainder += total_value / period
+        if(abs(round_to(accumulated_remainder)) >= abs(round_to(config['min_value']))):
+            amount = D(str(round_to(accumulated_remainder)))
+            accumulated_remainder -= amount
+            amounts.append(amount)
+            dates.append(date)
+        date = date + datetime.timedelta(days=step)
+        if(date > datetime.date.today()):
+            break
 
-    if(abs(total_value/period) > abs(config['min_value'])):
-        amountEach = total_value / period
-        duration = period
-    else:
-        if(total_value > 0):
-            amountEach = config['min_value']
-        else:
-            amountEach = -config['min_value']
-        duration = math.floor( abs(total_value) / config['min_value'] )
-
-    amounts = [];
-    accumulated_remainder = D(str(0));
-    for i in range(duration):
-        amounts.append( D(str(round_to(amountEach + accumulated_remainder))) )
-        accumulated_remainder += amountEach - amounts[len(amounts)-1]
-
-    return dates, amounts
+    return (dates, amounts)
 
 
 def parse_length(int_or_string):
