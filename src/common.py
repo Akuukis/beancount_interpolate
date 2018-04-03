@@ -3,7 +3,8 @@ import math
 import re
 from beancount.core.number import D
 from beancount.core.amount import Amount, mul
-from beancount.core import data
+from beancount.core.data import Transaction
+from beancount.core.data import Posting
 
 
 def extract_mark_posting(posting, config):
@@ -180,30 +181,26 @@ def new_filtered_entries(tx, params, get_amounts, selected_postings, config):
       selected_postings: A list of postings.
       config: A configuration string in JSON format given in source file.
     Returns:
-      A array of transaction entries.
+      An array of transaction entries.
     """
 
-    all_amounts = []
-    all_closing_dates = []
-    for _ in tx.postings:
-        all_amounts.append([])
-        all_closing_dates.append([])
+    all_pairs = []
 
-    for p, _, params, posting in selected_postings:
+    for _, new_account, params, posting in selected_postings:
         dates, amounts = get_amounts(params, tx.date, posting.units.number, config)
-        all_closing_dates[p] = dates
-        all_amounts[p] = amounts
+        all_pairs.append( (dates, amounts, posting, new_account) )
 
-    map_closing_dates = {}
-    for closing_dates in all_closing_dates:
-        for date in closing_dates:
-            map_closing_dates[date] = []
+    map_of_dates = {}
 
-    for p, new_account, _, posting in selected_postings:
-        for i in range( min(len(all_closing_dates[p]), len(all_amounts[p])) ):
-            amount = Amount(all_amounts[p][i], posting.units.currency)
+    for dates, amounts, posting, new_account in all_pairs:
+
+        for i in range( min(len(dates), len(amounts)) ):
+            if(not dates[i] in map_of_dates):
+                map_of_dates[dates[i]] = []
+
+            amount = Amount(amounts[i], posting.units.currency)
             # Income/Expense to be spread
-            map_closing_dates[all_closing_dates[p][i]].append(data.Posting(account=new_account,
+            map_of_dates[dates[i]].append(Posting(account=new_account,
                               units=amount,
                               cost=None,
                               price=None,
@@ -211,7 +208,7 @@ def new_filtered_entries(tx, params, get_amounts, selected_postings, config):
                               meta=None))
 
             # Asset/Liability that buffers the difference
-            map_closing_dates[all_closing_dates[p][i]].append(data.Posting(account=posting.account,
+            map_of_dates[dates[i]].append(Posting(account=posting.account,
                               units=mul(amount, D(-1)),
                               cost=None,
                               price=None,
@@ -219,14 +216,14 @@ def new_filtered_entries(tx, params, get_amounts, selected_postings, config):
                               meta=None))
 
     new_transactions = []
-    for i, (date, postings) in enumerate(sorted(map_closing_dates.items())):
+    for i, (date, postings) in enumerate(sorted(map_of_dates.items())):
         if len(postings) > 0:
-            e = data.Transaction(
+            e = Transaction(
                 date=date,
                 meta=tx.meta,
                 flag=tx.flag,
                 payee=tx.payee,
-                narration=tx.narration + config['suffix']%(i+1, len(closing_dates)),
+                narration=tx.narration + config['suffix']%(i+1, len(dates)),
                 tags={config['tag']},
                 links=tx.links,
                 postings=postings)
@@ -261,7 +258,7 @@ def new_whole_entries(tx, params, get_amounts, config):
 
         for p, posting in enumerate(tx.postings):
             if i < len(all_amounts[p]):
-                postings.append(data.Posting(
+                postings.append(Posting(
                     account=posting.account,
                     units=Amount(all_amounts[p][i], posting.units.currency),
                     cost=None,
@@ -270,7 +267,7 @@ def new_whole_entries(tx, params, get_amounts, config):
                     meta=None))
 
         if len(postings) > 0:
-            e = data.Transaction(
+            e = Transaction(
                 date=closing_dates[i],
                 meta=tx.meta,
                 flag=tx.flag,
