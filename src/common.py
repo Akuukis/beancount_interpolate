@@ -46,25 +46,20 @@ def extract_mark_tx(tx, config):
                     return tag[len(alias+config['alias_seperator']):] or ''
     return False
 
-
-# Infer Duration, start and steps. Spacing optinonal. Format: [123|KEYWORD] [@ YYYY-MM[-DD]] [/ step]
-# 0. max duration, 1. year, 2. month, 3. day, 4. min step
-RE_PARSING = re.compile(r"^\s*?([^-/\s]+)?\s*?(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?\s*?(?:\/\s*?([^-/\s]+)?\s*?)?$")
-def distribute_over_period(params, default_date, total_value, config):
+def parse_mark(mark, default_date, config):
     """
-    Distribute value over points in time.
+    Parse mark into date, duration and step.
 
     Args:
-        params: string of period.
+        mark: string of mark, i.e. "month @ 2018-04".
         default_date: date to fallback to.
-        total_value: decimal of total value.
         config: A configuration string in JSON format given in source file.
     Returns:
-        A tuple of list of decimals and list of dates.
+        A tuple of datetime date, integer duration and integer step.
     """
 
     try:
-        parts = re.findall(RE_PARSING, params)[0]
+        parts = re.findall(RE_PARSING, mark)[0]
         if parts[1] and parts[2]:
             begin_date = datetime.date(int(parts[1]), int(parts[2]), int(parts[3]) or 1)
         else:
@@ -82,12 +77,32 @@ def distribute_over_period(params, default_date, total_value, config):
 
     except Exception as e:
         # TODO: Error handling
-        print('WARNING: Using defaults, because cannot parse params (%s): %s'%(str(params), str(e)))
+        print('WARNING: Using defaults, because cannot parse mark "%s": %s'%(str(mark), str(e)))
 
         begin_date = default_date
         step = parse_length(config['default_step'])
         duration = parse_length(config['default_duration'])
 
+    return begin_date, duration, step
+
+
+# Infer Duration, start and steps. Spacing optinonal. Format: [123|KEYWORD] [@ YYYY-MM[-DD]] [/ step]
+# 0. max duration, 1. year, 2. month, 3. day, 4. min step
+RE_PARSING = re.compile(r"^\s*?([^-/\s]+)?\s*?(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?\s*?(?:\/\s*?([^-/\s]+)?\s*?)?$")
+def distribute_over_period(params, default_date, total_value, config):
+    """
+    Distribute value over points in time.
+
+    Args:
+        params: string of period.
+        default_date: date to fallback to.
+        total_value: decimal of total value.
+        config: A configuration string in JSON format given in source file.
+    Returns:
+        A tuple of list of decimals and list of dates.
+    """
+
+    begin_date, duration, step = parse_mark(params, default_date, config)
     period = math.floor( duration / step )
 
     if(period > config['max_new_tx']):
