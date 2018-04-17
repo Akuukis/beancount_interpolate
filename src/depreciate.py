@@ -1,21 +1,33 @@
 __author__ = 'Akuukis <akuukis@kalvis.lv'
 
 from beancount.core.number import D
+from beancount.core.data import filter_txns
 
-from .common_functions import check_aliases_entry
-from .common_functions import check_aliases_posting
-from .common_functions import new_filtered_entries
-from .common_functions import distribute_over_period
+from .common import extract_mark_tx
+from .common import extract_mark_posting
+from .common import new_filtered_entries
+from .common import distribute_over_period
+from .common import read_config
 
 __plugins__ = ['depreciate']
 
 
-def depreciate(entries, options_map, config_string):
+def depreciate(entries, options_map, config_string=""):
+    """
+    Beancount plugin: Generates new entries to depreciate target posting over given period.
+
+    Args:
+      entries: A list of directives. We're interested only in the Transaction instances.
+      options_map: A parser options dict.
+      config_string: A configuration string in JSON format given in source file.
+    Returns:
+      A tuple of entries and errors.
+    """
+
     errors = []
 
-    config_obj = eval(config_string, {}, {})
-    if not isinstance(config_obj, dict):
-        raise RuntimeError("Invalid plugin configuration: should be a single dict.")
+    ## Parse config and set defaults
+    config_obj = read_config(config_string)
     config = {
       # aliases_before  : config_obj.pop('aliases_before'  , ['spreadBefore']),
         'aliases_after'   : config_obj.pop('aliases_after'   , ['deprAfter', 'depr']),
@@ -33,16 +45,14 @@ def depreciate(entries, options_map, config_string):
     }
 
     newEntries = []
-    for i, entry in enumerate(entries):
+    for tx in filter_txns(entries):
 
-        if not hasattr(entry, 'postings'):
-            continue
-
+        # Spread at posting level because not all account types may be eligible.
         selected_postings = []
-        for i, posting in enumerate(entry.postings):
-            # TODO: ALIASES_BEFORE
-            params = check_aliases_posting(posting, config) \
-                  or check_aliases_entry(entry, config) \
+        for i, posting in enumerate(tx.postings):
+            # We are interested in only marked postings. TODO: ALIASES_BEFORE.
+            params = extract_mark_posting(posting, config) \
+                  or extract_mark_tx(tx, config) \
                   or False
             if not params:
                 continue
@@ -52,7 +62,11 @@ def depreciate(entries, options_map, config_string):
                     new_account = config['translations'][translation] + posting.account[len(translation):]
                     selected_postings.append( (i, new_account, params, posting) )
 
+        # For selected postings no need to change the original.
+        pass
+
+        # For selected postings add new postings bundled into entries.
         if len(selected_postings) > 0:
-            newEntries = newEntries + new_filtered_entries(entry, params, distribute_over_period, selected_postings, config)
+            newEntries = newEntries + new_filtered_entries(tx, params, distribute_over_period, selected_postings, config)
 
     return entries + newEntries, errors

@@ -1,23 +1,33 @@
 __author__ = 'Akuukis <akuukis@kalvis.lv'
 
 from beancount.core.amount import Amount
-from beancount.core import data
+from beancount.core.data import filter_txns
 from beancount.core.number import D
 
-from .common_functions import check_aliases_entry
-from .common_functions import distribute_over_period
-from .common_functions import new_whole_entries
+from .common import extract_mark_tx
+from .common import distribute_over_period
+from .common import new_whole_entries
+from .common import read_config
 
 __plugins__ = ['split']
 
 
-def split(entries, options_map, config_string):
+def split(entries, options_map, config_string=""):
+    """
+    Beancount plugin: Dublicates all entry postings over time at fraction of value.
+
+    Args:
+      entries: A list of directives. We're interested only in the Transaction instances.
+      options_map: A parser options dict.
+      config_string: A configuration string in JSON format given in source file.
+    Returns:
+      A tuple of entries and errors.
+    """
+
     errors = []
 
     ## Parse config and set defaults
-    config_obj = eval(config_string, {}, {})
-    if not isinstance(config_obj, dict):
-        raise RuntimeError("Invalid plugin configuration: should be a single dict.")
+    config_obj = read_config(config_string)
     config = {
         # ALIASES_BEFORE  : config_obj.pop('aliases_before'  , ['splitBefore']),
         'aliases_after'   : config_obj.pop('aliases_after'   , ['splitAfter', 'split']),
@@ -32,18 +42,19 @@ def split(entries, options_map, config_string):
 
     newEntries = []
     trashbin = []
-    for i, entry in enumerate(entries):
+    for tx in filter_txns(entries):
 
-        if not hasattr(entry, 'postings'):
-            continue
+        # Split at entry level only, so that it balances.
+        pass
 
-        # TODO: ALIASES_BEFORE
-        params = check_aliases_entry(entry, config)
+        # We are interested in only marked entries. TODO: ALIASES_BEFORE.
+        params = extract_mark_tx(tx, config)
         if not params:
             continue
 
-        trashbin.append(entry)
-        newEntries = newEntries + new_whole_entries(entry, params, distribute_over_period, config)
+        # For selected entries add new entries.
+        trashbin.append(tx)
+        newEntries = newEntries + new_whole_entries(tx, params, distribute_over_period, config)
 
     for trash in trashbin:
         entries.remove(trash)
