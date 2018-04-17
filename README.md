@@ -1,12 +1,12 @@
-# Interpolate
+Interpolate
+===============================================================================
 
 Four plugins for double-entry accounting system Beancount to interpolate transactions by generating additional entries over time.
 
 They are:
 - `recur`: dublicates all entry postings over time
 - `split`: dublicates all entry postings over time at fraction of value
-- `depr`: generates new entries to depreciate target posting over given period
-- `spread`: same as `depr` but for *Income* and *Expenses* postings
+- `depr`: generates new entries to depreciate target asset/liability posting over given period
 - `spread`: generate new entries to allocate P&L of target income/expense posting over given period
 
 These plugins are triggered by adding metadata or tags to source entries. It's safe to disable at any time. All plugins share the same parser that can set maximal period, custom starting date and minimal step by either number or keyword.
@@ -15,18 +15,23 @@ You can use these to define recurring transactions, account for depreciation, sm
 
 > This `depr` is not yet compatible with any accounting standards. For tax-compatible yearly depreciation take a look at this [plugin](https://bitbucket.org/snippets/happyalu/EAMgj/beancount-automated-depreciation-plugin) by Alok Parlikar under MIT license. All contributions to improve `depr` are welcome.
 
-# Install
+
+
+
+Install
+===============================================================================
 
 ```
 pip3 install beancount-interpolate --user
 ```
 
-Or copy to path used for python. For example, `$HOME/.local/lib/python3.4/site-packages/beancount-interpolate/*` would do on Debian. If in doubt, look where `beancount` folder is and copy next to it.
+Or copy to path used for python. For example, `$HOME/.local/lib/python3.6/site-packages/beancount-interpolate/*` would do on Debian. If in doubt, look where `beancount` folder is and copy next to it.
 
 
-# Details
 
-## Spread
+
+Details: Spread
+===============================================================================
 
 ### Problem
 
@@ -47,24 +52,10 @@ Possible solutions:
 
 ### How to use
 
-Copy/paste default variables for plugin and edit for yourself.
+Enable the plugin (see available options below).
 
 ```beancount
-; Set defaults.
-plugin "beancount-interpolate.spread" "{
-    'account_income': 'Income',
-    'account_expenses': 'Expenses',
-    'account_assets': 'Assets:Current',
-    'account_liab': 'Liabilities:Current',
-    'aliases_after': ['spreadAfter', 'spread'],
-    'default_duration': 'Month',
-    'default_step': 'Day',
-    'default_method': 'SL',  # Straight Line
-    'min_value': 0.05,  # cannot be smaller than 0.01
-    'max_new_tx': 9999,
-    'suffix': ' (spread %d/%d)',
-    'tag': 'spreaded'
-}"
+plugin "beancount-interpolate.spread"
 ```
 
 Add meta or tags to your transactions. All folllowing transactions does the same.
@@ -124,7 +115,11 @@ Second, plugin inserts 30 or 31 transactions from 2016-05-01 to 2016-05-31 like 
     Liabilities:Current:TheCompany:NetSalary         10.00 EUR
 ```
 
-## Recur
+
+
+
+Details: Recur
+===============================================================================
 
 ### Problem
 
@@ -132,21 +127,17 @@ You want to make recurring entry every X days until forever (or some Y days have
 
 ### How to use
 
+Enable the plugin (see available options below).
+
 ```beancount
-plugin "beancount-interpolate.recur" "{
-    'aliases_after': ['recurAfter', 'recur'],
-    'default_duration': 'Infinite',
-    'default_step': 'Day',
-    'default_method': 'SL',
-    'min_value': 0.05,
-    'max_new_tx': 9999,
-    'suffix': ' (recur %d/%d)',
-    'tag': 'recurred'
-}"
+plugin "beancount-interpolate.recur"
 ```
 
 
-## Split
+
+
+Details: Split
+===============================================================================
 
 ### Problem
 
@@ -154,17 +145,10 @@ In fact, the argumentation is the same as in `spread`, but the only difference i
 
 ### How to use
 
+Enable the plugin (see available options below).
+
 ```beancount
-plugin "beancount-interpolate.split" "{
-    'aliases_after': ['splitAfter', 'split'],
-    'default_duration': 'Month',
-    'default_step': 'Day',
-    'default_method': 'SL',
-    'min_value': 0.05,
-    'max_new_tx': 9999,
-    'suffix': ' (split %d/%d)',
-    'tag': 'splitted'
-}"
+plugin "beancount-interpolate.split"
 ```
 
 Add meta or tags to your transactions. All folllowing transactions does the same.
@@ -207,7 +191,11 @@ Second, plugin inserts transactions every day until today, included.
 ...
 ```
 
-## Depreciate
+
+
+
+Details: Depreciate
+===============================================================================
 
 ### Problem
 
@@ -215,23 +203,10 @@ Depreciate technically is the same as spread but from other way around. But prac
 
 ### How to use
 
-Copy/paste default variables for plugin and edit for yourself.
+Enable the plugin (see available options below).
 
 ```beancount
-; Set defaults.
-plugin "beancount-interpolate.spread" "{
-    'account_income': 'Income:Appreciation',
-    'account_expenses': 'Expenses:Depreciation',
-    'account_assets': 'Assets:Fixed',
-    'account_liab': 'Liabilities:Fixed',
-    'aliases_after': ['deprAfter', 'depr'],
-    'default_duration': 'Year',
-    'default_step': 'Day',
-    'min_value': 0.05,  # cannot be smaller than 0.01
-    'max_new_tx': 9999,
-    'suffix': ' (depr %d/%d)',
-    'tag': 'depred'
-}"
+plugin "beancount-interpolate.depr"
 ```
 
 Add meta or tags to your transactions. All folllowing transactions does the same.
@@ -288,7 +263,158 @@ Plugin inserts lots of transactions starting from given date until end (or today
     Expenses:Depreciation:PC          00.54 EUR
 ```
 
-# Development
+
+
+
+Options
+===============================================================================
+
+In Beancount, options are passed to plugins as second argument and may be multi-line.
+To `beancount-interpolate` options have to be formatted as valid JSON.
+
+Options that applies to all four plugins:
+
+* `aliases_after` - list of strings to look for in meta and tags.
+* `default_duration` - integer or string of keyword that plugin will default duration to, if none was provided in mark.
+* `default_step` - integer that plugin will default step to, if none was provided in mark.
+* `min_value` - decimal that will be the minimal value of leg within created transactions.
+* `max_new_tx` - integer that will be the maximal amount of newly created transactions.
+* `suffix` - string appended to created transaction annotations. Two variables are n-th transaction and total amount of transactions.
+* `tag` - string that as tag will be applied to all created transactions.
+
+Options that applies only to `spread` and `depr`. For `spread` new transactions are created under account name where `account_expense` and `account_income` prefixes are swapped to `account_assets` or `account_liab` prefixes respectively. For `depr` that other way around: `account_assets` and `account_liab` prefixes are swapped to `account_expense` and `account_income` prefixes instead.
+* `account_income`
+* `account_expenses`
+* `account_assets`
+* `account_liab`
+
+### Defaults
+
+Here are all available options and their default values. Options are passed as serialized object to the plugin.
+
+```beancount
+plugin "beancount-interpolate.recur" "{
+    'aliases_after': ['recurAfter', 'recur'],
+    'default_duration': 'Infinite',
+    'default_step': 'Day',
+    'default_method': 'SL',
+    'min_value': 0.05,
+    'max_new_tx': 9999,
+    'suffix': ' (recur %d/%d)',
+    'tag': 'recurred'
+}"
+
+plugin "beancount-interpolate.split" "{
+    'aliases_after': ['splitAfter', 'split'],
+    'default_duration': 'Month',
+    'default_step': 'Day',
+    'default_method': 'SL',
+    'min_value': 0.05,
+    'max_new_tx': 9999,
+    'suffix': ' (split %d/%d)',
+    'tag': 'splitted'
+}"
+
+plugin "beancount-interpolate.spread" "{
+    'account_income': 'Income',
+    'account_expenses': 'Expenses',
+    'account_assets': 'Assets:Current',
+    'account_liab': 'Liabilities:Current',
+    'aliases_after': ['spreadAfter', 'spread'],
+    'default_duration': 'Month',
+    'default_step': 'Day',
+    'default_method': 'SL',  # Straight Line
+    'min_value': 0.05,  # cannot be smaller than 0.01
+    'max_new_tx': 9999,
+    'suffix': ' (spread %d/%d)',
+    'tag': 'spreaded'
+}"
+
+plugin "beancount-interpolate.depr" "{
+    'account_income': 'Income:Appreciation',
+    'account_expenses': 'Expenses:Depreciation',
+    'account_assets': 'Assets:Fixed',
+    'account_liab': 'Liabilities:Fixed',
+    'aliases_after': ['deprAfter', 'depr'],
+    'default_duration': 'Year',
+    'default_step': 'Day',
+    'min_value': 0.05,  # cannot be smaller than 0.01
+    'max_new_tx': 9999,
+    'suffix': ' (depr %d/%d)',
+    'tag': 'depred'
+}"
+```
+
+### Details: `aliases_after`
+
+* Type: list of strings
+
+If any of aliases are found in transaction tag, transaction meta or posting meta, then the plugin will be applied.
+
+### Details: `default_duration`
+
+* Type: integer or string (one of keywords: day, week, month, year, inf, infinite, max)
+
+Default duration to apply when one is not specified explicitly. Note that month and year keywords do not adapt to current period, but are simple constants (PR welcome!)
+
+### Details: `default_step`
+
+* Type: integer
+
+Default step to apply when one is not specified explicitly. In fact, currently it is not possible to specify it explicitly on per-case basis (PR welcome!)
+
+### Details: `min_value`
+
+* Type: decimal
+* Restrictions: no less than 0.01
+
+Minimal value of leg when for new created transactions. It will try to do so Here's example how it works:
+
+For example, you want to spread your groceries 10.00 USD over 7 days, but it apparently doesn't divide nicely. So,
+* 1st day would get allocated 1.43 USD but -0.001429 is kept aside (10.00/7=1.428571).
+* 2nd day would get allocated 1.43 USD but -0.002858 is kept aside (10.00/7=1.428571-0.001429=1.427142)
+* 3rd day would get allocated 1.43 USD but -0.004287 is kept aside (10.00/7=1.428571-0.002858=1.425713)
+* 4th day would get allocated *1.42* USD but +0.004284 is kept aside (10.00/7=1.428571-0.004287=1.424284)
+* 5th day would get allocated 1.43 USD but +0.002855 is kept aside (10.00/7=1.428571+0.004284=1.432855)
+* 6th day would get allocated 1.43 USD but +0.001426 is kept aside (10.00/7=1.428571+0.002855=1.431426)
+* 7th day would get allocated 1.43 USD and only pure rounding error is kept aside (10.00/7=1.428571+0.001426=1.429997)
+
+
+The `min_value` is required to be at least 0.01 by beancount, but I'd recommend to raise it even further to avoid "1-cent spam" that lowers readability of reports and impacts performance.
+
+There's an interesting behavior for transactions that are very small. If on any day the allocation is smaller by `min_value` for any of legs, the transaction on that day is not generated and put aside in full. Thus, such small transactions tend to happen once in a while with `min_value` amount. Even more funny, if there are more than one posting with small amount, those postings keep their "put aside" values seperaly - it may happen that at some day there will be a transaction with both of postings, effectively giving double of `min_value`. It may be hard to those little postings in reports, and I doubt that anyone would care about them at all, the best place to look at is the source.
+
+
+### Details: `max_new_tx`
+
+* Type: integer
+
+Caps the max new transactions generated for one entry. By default set to 9999, looks like working but is not tested.
+
+
+### Details: `suffix`
+
+* Type: string
+
+Suffix is string appended to created transaction annotations. It has two variables within in the given order:
+1. n-th transaction
+2. total amount of transactions.
+
+### Details: `tag`
+
+* Type: string
+
+String that as tag will be applied to all created transactions.
+
+
+
+
+
+
+
+
+Development
+===============================================================================
 
 The source contains five files - one per plugin and commons. Plugins have very similar structure in pairs: spread is similar to depreciate, and recur is similar to split.
 
