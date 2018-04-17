@@ -1,16 +1,15 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.6
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='beancount-interpolate',
-    version='2.1.0',
+    version='2.1.1',
     description='Plugins for Beancount to interpolate transactions',
     long_description=
     """
 Four plugins for double-entry accounting system Beancount to interpolate transactions by generating additional entries over time.
 
-They are:
 - `recur`: dublicates all entry postings over time
 - `split`: dublicates all entry postings over time at fraction of value
 - `depr`: generates new entries to depreciate target asset/liability posting over given period

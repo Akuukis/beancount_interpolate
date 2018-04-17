@@ -1,4 +1,6 @@
 __pycache__/
+build/
 dist/
+beancount_interpolate.egg-info/
 MANIFEST
 *.pyc
