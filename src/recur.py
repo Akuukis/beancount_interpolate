@@ -6,6 +6,7 @@ from beancount.core.number import D
 
 from .common import extract_mark_tx
 from .common import new_whole_entries
+from .common import read_config
 
 __plugins__ = ['recur']
 
@@ -33,9 +34,7 @@ def recur(entries, options_map, config_string):
     errors = []
 
     ## Parse config and set defaults
-    config_obj = eval(config_string, {}, {})
-    if not isinstance(config_obj, dict):
-        raise RuntimeError("Invalid plugin configuration: should be a single dict.")
+    config_obj = read_config(config_string)
     config = {
         # ALIASES_BEFORE  : config_obj.pop('aliases_before'  , ['recurBefore']),
         'aliases_after'   : config_obj.pop('aliases_after'   , ['recurAfter', 'recur']),

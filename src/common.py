@@ -283,3 +283,13 @@ def new_whole_entries(tx, params, get_amounts, config):
             new_transactions.append(e)
 
     return new_transactions
+
+def read_config(config_string):
+    if len(config_string) == 0:
+        config_obj = {}
+    else:
+        config_obj = eval(config_string, {}, {})
+
+    if not isinstance(config_obj, dict):
+        raise RuntimeError("Invalid plugin configuration: should be a single dict.")
+    return config_obj

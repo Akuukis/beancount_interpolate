@@ -7,11 +7,12 @@ from .common import extract_mark_tx
 from .common import extract_mark_posting
 from .common import new_filtered_entries
 from .common import distribute_over_period
+from .common import read_config
 
 __plugins__ = ['depreciate']
 
 
-def depreciate(entries, options_map, config_string):
+def depreciate(entries, options_map, config_string=""):
     """
     Beancount plugin: Generates new entries to depreciate target posting over given period.
 
@@ -25,9 +26,8 @@ def depreciate(entries, options_map, config_string):
 
     errors = []
 
-    config_obj = eval(config_string, {}, {})
-    if not isinstance(config_obj, dict):
-        raise RuntimeError("Invalid plugin configuration: should be a single dict.")
+    ## Parse config and set defaults
+    config_obj = read_config(config_string)
     config = {
       # aliases_before  : config_obj.pop('aliases_before'  , ['spreadBefore']),
         'aliases_after'   : config_obj.pop('aliases_after'   , ['deprAfter', 'depr']),
