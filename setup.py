@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='beancount-interpolate',
-    version='2.1.1',
+    version='2.1.2',
     description='Plugins for Beancount to interpolate transactions',
     long_description=
     """

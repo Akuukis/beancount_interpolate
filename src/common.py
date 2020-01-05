@@ -170,7 +170,12 @@ def longest_leg(all_amounts):
     """
     firsts = []
     for amounts in all_amounts:
-        firsts.append( abs(amounts[0]) )
+        if len(amounts) == 0:
+            # Should not have empty postings, but if do then at least don't crash.
+            firsts.append( 0 )
+        else:
+            firsts.append( abs(amounts[0]) )
+
     return firsts.index(max(firsts))
 
 
