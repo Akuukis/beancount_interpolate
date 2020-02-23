@@ -22,10 +22,10 @@ Install
 ===============================================================================
 
 ```
-pip3 install beancount-interpolate --user
+pip3 install beancount_interpolate --user
 ```
 
-Or copy to path used for python. For example, `$HOME/.local/lib/python3.6/site-packages/beancount-interpolate/*` would do on Debian. If in doubt, look where `beancount` folder is and copy next to it.
+Or copy to path used for python. For example, `$HOME/.local/lib/python3.7/site-packages/beancount_interpolate/*` would do on Debian. If in doubt, look where `beancount` folder is and copy next to it.
 
 
 
@@ -55,7 +55,7 @@ Possible solutions:
 Enable the plugin (see available options below).
 
 ```beancount
-plugin "beancount-interpolate.spread"
+plugin "beancount_interpolate.spread"
 ```
 
 Add meta or tags to your transactions. All folllowing transactions does the same.
@@ -130,7 +130,7 @@ You want to make recurring entry every X days until forever (or some Y days have
 Enable the plugin (see available options below).
 
 ```beancount
-plugin "beancount-interpolate.recur"
+plugin "beancount_interpolate.recur"
 ```
 
 
@@ -148,7 +148,7 @@ In fact, the argumentation is the same as in `spread`, but the only difference i
 Enable the plugin (see available options below).
 
 ```beancount
-plugin "beancount-interpolate.split"
+plugin "beancount_interpolate.split"
 ```
 
 Add meta or tags to your transactions. All folllowing transactions does the same.
@@ -206,7 +206,7 @@ Depreciate technically is the same as spread but from other way around. But prac
 Enable the plugin (see available options below).
 
 ```beancount
-plugin "beancount-interpolate.depr"
+plugin "beancount_interpolate.depr"
 ```
 
 Add meta or tags to your transactions. All folllowing transactions does the same.
@@ -270,7 +270,7 @@ Options
 ===============================================================================
 
 In Beancount, options are passed to plugins as second argument and may be multi-line.
-To `beancount-interpolate` options have to be formatted as valid JSON.
+To `beancount_interpolate` options have to be formatted as valid JSON.
 
 Options that applies to all four plugins:
 
@@ -293,7 +293,7 @@ Options that applies only to `spread` and `depr`. For `spread` new transactions 
 Here are all available options and their default values. Options are passed as serialized object to the plugin.
 
 ```beancount
-plugin "beancount-interpolate.recur" "{
+plugin "beancount_interpolate.recur" "{
     'aliases_after': ['recurAfter', 'recur'],
     'default_duration': 'Infinite',
     'default_step': 'Day',
@@ -304,7 +304,7 @@ plugin "beancount-interpolate.recur" "{
     'tag': 'recurred'
 }"
 
-plugin "beancount-interpolate.split" "{
+plugin "beancount_interpolate.split" "{
     'aliases_after': ['splitAfter', 'split'],
     'default_duration': 'Month',
     'default_step': 'Day',
@@ -315,7 +315,7 @@ plugin "beancount-interpolate.split" "{
     'tag': 'splitted'
 }"
 
-plugin "beancount-interpolate.spread" "{
+plugin "beancount_interpolate.spread" "{
     'account_income': 'Income',
     'account_expenses': 'Expenses',
     'account_assets': 'Assets:Current',
@@ -330,7 +330,7 @@ plugin "beancount-interpolate.spread" "{
     'tag': 'spreaded'
 }"
 
-plugin "beancount-interpolate.depr" "{
+plugin "beancount_interpolate.depr" "{
     'account_income': 'Income:Appreciation',
     'account_expenses': 'Expenses:Depreciation',
     'account_assets': 'Assets:Fixed',
@@ -418,11 +418,4 @@ Development
 
 The source contains five files - one per plugin and commons. Plugins have very similar structure in pairs: spread is similar to depreciate, and recur is similar to split.
 
-Documentation is inline.
-
-### Publish (note to myself)
-
-```
-python3.6 setup.py sdist bdist_wheel
-twine upload dist/*
-```
+Please see Makefile and inline comments.

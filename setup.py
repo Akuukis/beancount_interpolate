@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(
-    name='beancount-interpolate',
+    name='beancount_interpolate',
     version='2.1.2',
     description='Plugins for Beancount to interpolate transactions',
     long_description=
@@ -23,10 +23,10 @@ You can use these to define recurring transactions, account for depreciation, sm
     license='GNU GPLv3',
     author='Kalvis \'Akuukis\' Kalnins',
     author_email='akuukis@kalvis.lv',
-    url='https://github.com/Akuukis/beancount-interpolate',
-    download_url='https://pypi.python.org/pypi/beancount-interpolate',
-    package_dir={'beancount-interpolate': 'src'},
-    packages=['beancount-interpolate'],
-    package_data={'beancount-interpolate': ['../README.md']},
+    url='https://github.com/Akuukis/beancount_interpolate',
+    download_url='https://pypi.python.org/pypi/beancount_interpolate',
+    package_dir={'beancount_interpolate': 'beancount_interpolate'},
+    packages=['beancount_interpolate'],
+    package_data={'beancount_interpolate': ['../README.md']},
     requires=['beancount (>2.0)'],
      )

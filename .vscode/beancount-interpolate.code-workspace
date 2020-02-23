@@ -1,30 +1,63 @@
 {
-	"folders": [
-		{
-			"path": ".."
-		}
-	],
-	"settings": {
-		"cucumberautocomplete.steps": [
-			"test/*.py"
-		],
-		"cucumberautocomplete.syncfeatures": "test/*.feature",
-		"cucumberautocomplete.strictGherkinCompletion": true,
-		"cucumberautocomplete.strictGherkinValidation": true,
-		"cucumberautocomplete.smartSnippets": true,
-		"cucumberautocomplete.stepsInvariants": true,
-		"cucumberautocomplete.skipDocStringsFormat": false,
-		"cucumberautocomplete.onTypeFormat": true,
-		"editor.quickSuggestions": {
-			"comments": true,
-			"strings": true,
-			"other": true
-		},
-		"cucumberautocomplete.gherkinDefinitionPart": "@(given|when|then|step)\\(parsers.parse\\(",
-		// "cucumberautocomplete.gherkinDefinitionPart": "@(given|when|then|step)\\((parsers.parse\\()?",  // TODO
-		"cucumberautocomplete.stepRegExSymbol": "'",
-		"python.linting.pylintEnabled": true,
-		"python.linting.enabled": true,
-		"python.pythonPath": "/usr/bin/python3.7"
-	}
+    "extensions": {
+        "recommendations": [
+            "alexkrechik.cucumberautocomplete",
+            "eamodio.gitlens",
+            "editorconfig.editorconfig",
+            "jasonnutter.vscode-codeowners",
+            "ms-python.python",
+            "shardulm94.trailing-spaces",
+            "tyriar.sort-lines",
+            "yzhang.markdown-all-in-one"
+        ]
+    },
+    "folders": [
+        {
+            "name": "beancount_interpolate",
+            "path": "../beancount_interpolate"
+        },
+        {
+            "name": "tests",
+            "path": "../tests"
+        },
+        {
+            "name": "<root>",
+            "path": ".."
+        }
+    ],
+    "settings": {
+        "cucumberautocomplete.steps": [
+            "test/*.py"
+        ],
+        "cucumberautocomplete.syncfeatures": "test/*.feature",
+        "cucumberautocomplete.strictGherkinCompletion": true,
+        "cucumberautocomplete.strictGherkinValidation": true,
+        "cucumberautocomplete.smartSnippets": true,
+        "cucumberautocomplete.stepsInvariants": true,
+        "cucumberautocomplete.skipDocStringsFormat": false,
+        "cucumberautocomplete.onTypeFormat": true,
+        "editor.quickSuggestions": {
+            "comments": true,
+            "strings": true,
+            "other": true
+        },
+        "cucumberautocomplete.gherkinDefinitionPart": "@(given|when|then|step)\\(parsers.parse\\(",
+        // "cucumberautocomplete.gherkinDefinitionPart": "@(given|when|then|step)\\((parsers.parse\\()?",  // TODO
+        "cucumberautocomplete.stepRegExSymbol": "'",
+        "files.exclude": {
+            "**/.git": true,
+            "**/.svn": true,
+            "**/.hg": true,
+            "**/CVS": true,
+            "**/.DS_Store": true,
+            "**/__pycache__": true,
+            "**/.pytest_cache": true,
+            "beancount_interpolate/": true,
+            "tests/": true
+        },
+        "editor.detectIndentation": false,  // Let `.editconfig` decide.
+        "python.linting.pylintEnabled": true,
+        "python.linting.enabled": true,
+        "python.pythonPath": "/usr/bin/python3.7"
+    }
 }
