@@ -1,7 +1,11 @@
 init:
-    pip install -r requirements.txt
+	pip3 install -r requirements.txt
 
 test:
-    pytest
+	pytest
+
+upload:
+	python3 setup.py sdist bdist_wheel
+	twine upload dist/*
 
 .PHONY: init test

@@ -418,11 +418,4 @@ Development
 
 The source contains five files - one per plugin and commons. Plugins have very similar structure in pairs: spread is similar to depreciate, and recur is similar to split.
 
-Documentation is inline.
-
-### Publish (note to myself)
-
-```
-python3.6 setup.py sdist bdist_wheel
-twine upload dist/*
-```
+Please see Makefile and inline comments.
