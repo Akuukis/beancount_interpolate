@@ -1,6 +1,11 @@
 Interpolate
 ===============================================================================
 
+[![PyPI - Version](https://img.shields.io/pypi/v/beancount_interpolate)](https://pypi.org/project/packages/beancount_interpolate/)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/beancount_interpolate)
+![PyPI - Wheel](https://img.shields.io/pypi/wheel/beancount_interpolate)
+![PyPI - License](https://img.shields.io/pypi/l/beancount_interpolate)
+
 Four plugins for double-entry accounting system Beancount to interpolate transactions by generating additional entries over time.
 
 They are:
