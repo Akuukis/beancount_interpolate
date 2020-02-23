@@ -1,0 +1,30 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"cucumberautocomplete.steps": [
+			"test/*.py"
+		],
+		"cucumberautocomplete.syncfeatures": "test/*.feature",
+		"cucumberautocomplete.strictGherkinCompletion": true,
+		"cucumberautocomplete.strictGherkinValidation": true,
+		"cucumberautocomplete.smartSnippets": true,
+		"cucumberautocomplete.stepsInvariants": true,
+		"cucumberautocomplete.skipDocStringsFormat": false,
+		"cucumberautocomplete.onTypeFormat": true,
+		"editor.quickSuggestions": {
+			"comments": true,
+			"strings": true,
+			"other": true
+		},
+		"cucumberautocomplete.gherkinDefinitionPart": "@(given|when|then|step)\\(parsers.parse\\(",
+		// "cucumberautocomplete.gherkinDefinitionPart": "@(given|when|then|step)\\((parsers.parse\\()?",  // TODO
+		"cucumberautocomplete.stepRegExSymbol": "'",
+		"python.linting.pylintEnabled": true,
+		"python.linting.enabled": true,
+		"python.pythonPath": "/usr/bin/python3.7"
+	}
+}
