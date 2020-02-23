@@ -1,4 +1,15 @@
 {
+    "extensions": {
+        "recommendations": [
+            "alexkrechik.cucumberautocomplete",
+            "eamodio.gitlens",
+            "editorconfig.editorconfig",
+            "ms-python.python",
+            "shardulm94.trailing-spaces",
+            "tyriar.sort-lines",
+            "yzhang.markdown-all-in-one"
+        ]
+    },
     "folders": [
         {
             "name": "beancount_interpolate",
@@ -43,6 +54,7 @@
             "beancount_interpolate/": true,
             "tests/": true
         },
+        "editor.detectIndentation": false,  // Let `.editconfig` decide.
         "python.linting.pylintEnabled": true,
         "python.linting.enabled": true,
         "python.pythonPath": "/usr/bin/python3.7"
