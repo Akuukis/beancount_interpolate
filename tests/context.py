@@ -7,4 +7,4 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src import common, depreciate, recur, split, spread
+from beancount_interpolate import common, depreciate, recur, split, spread
