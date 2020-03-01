@@ -19,7 +19,9 @@ Feature: Spread income or expense postings over a period
                 Liabilities:Current:TheCompany:NetSalary       -300.00 EUR
                 Assets:MyBank:Checking                          300.00 EUR
 
-        And the following transactions should be generated (not exhaustive):
+        And 30 new transactions should be generated
+    
+        And the newly generated transactions should include:
             ;
             ; Each new transaction transfers a fraction of the balance in the
             ; Liabilities:Current:... account back to Income:...
@@ -64,7 +66,9 @@ Feature: Spread income or expense postings over a period
                 Assets:Current:Bills:Internet                  -75.00 EUR
                 Assets:MyBank:Checking                          75.00 EUR
 
-        And the following transactions should be generated (not exhaustive):
+        And 30 new transactions should be generated
+    
+        And the newly generated transactions should include:
             ;
             ; Each new transaction transfers a fraction of the balance in the
             ; Assets:Current:... account back to Expenses:...
