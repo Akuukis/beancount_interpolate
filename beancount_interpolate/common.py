@@ -1,4 +1,5 @@
 import datetime
+import calendar
 import math
 import re
 from beancount.core.number import D
@@ -6,8 +7,46 @@ from beancount.core.amount import Amount, mul
 from beancount.core.data import Transaction
 from beancount.core.data import Posting
 
+from collections import namedtuple
+
+def add_month(sourcedate):
+    if sourcedate.month == 12:
+        new_year = sourcedate.year + 1
+        new_month = 1
+    else:
+        new_year = sourcedate.year
+        new_month = sourcedate.month + 1
+    
+    new_day = min(sourcedate.day, calendar.monthrange(new_year, new_month)[1])
+
+    return datetime.date(new_year, new_month, new_day)
+
 def round_to(n):
     return round(n*100)/100
+
+Series = namedtuple('Series', ['begin', 'duration', 'step'])
+
+def new_period(start, length, step):
+    days = None
+    try:
+        return Period(start, int(length), step)
+    except ValueError:
+        pass
+    try:
+        keywords = {
+            'day':      lambda x: 1,
+            'week':     lambda x: 7,
+            'month':    lambda x: (add_month(x)-x).days,
+            'year':     lambda x: 365,
+            'inf':      lambda x: 365*1000000,
+            'infinite': lambda x: 365*1000000,
+            'max':      lambda x: 365*1000000
+        }
+        return Period(start, keywords[length.lower()](start), step)
+    except:
+        pass
+
+    raise Exception('Invalid period: ' + length)
 
 def extract_mark_posting(posting, config):
     """
@@ -83,13 +122,13 @@ def parse_mark(mark, default_date, config):
         step = parse_length(config['default_step'])
         duration = parse_length(config['default_duration'])
 
-    return begin_date, duration, step
+    return Series(begin_date, duration, step)
 
 
 # Infer Duration, start and steps. Spacing optinonal. Format: [123|KEYWORD] [@ YYYY-MM[-DD]] [/ step]
 # 0. max duration, 1. year, 2. month, 3. day, 4. min step
 RE_PARSING = re.compile(r"^\s*?([^-/\s]+)?\s*?(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?\s*?(?:\/\s*?([^-/\s]+)?\s*?)?$")
-def distribute_over_period(params, default_date, total_value, config):
+def distribute_over_period(series, total_value, config):
     """
     Distribute value over points in time.
 
@@ -102,7 +141,10 @@ def distribute_over_period(params, default_date, total_value, config):
         A tuple of list of decimals and list of dates.
     """
 
-    begin_date, duration, step = parse_mark(params, default_date, config)
+    duration = series.duration
+    step = series.step
+    begin_date = series.begin
+
     period = math.floor( duration / step )
 
     if(period > config['max_new_tx']):
@@ -127,15 +169,14 @@ def distribute_over_period(params, default_date, total_value, config):
 
     return (dates, amounts)
 
-
 def parse_length(int_or_string):
     """
-    Parses length value or keywords into value.
+    Parses integer length or keywords into number of days.
 
     Args:
         int_or_string: string with number or keyword.
     Returns:
-        A integer.
+        An integer number of days.
     """
     try:
         return int(int_or_string)
@@ -195,8 +236,10 @@ def new_filtered_entries(tx, params, get_amounts, selected_postings, config):
 
     all_pairs = []
 
+    series = parse_mark(params, tx.date, config)
+
     for _, new_account, params, posting in selected_postings:
-        dates, amounts = get_amounts(params, tx.date, posting.units.number, config)
+        dates, amounts = get_amounts(series, posting.units.number, config)
         all_pairs.append( (dates, amounts, posting, new_account) )
 
     map_of_dates = {}
@@ -243,10 +286,11 @@ def new_filtered_entries(tx, params, get_amounts, selected_postings, config):
 
 def new_whole_entries(tx, params, get_amounts, config):
 
+    series = parse_mark(params, tx.date, config)
 
     all_amounts = [];
     for posting in tx.postings:
-        closing_dates, amounts = get_amounts(params, tx.date, posting.units.number, config)
+        closing_dates, amounts = get_amounts(series, posting.units.number, config)
         all_amounts.append( amounts )
 
     accumulator_index = longest_leg(all_amounts)

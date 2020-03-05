@@ -14,8 +14,8 @@ from .common import read_config
 __plugins__ = ['spread']
 
 
-def distribute_over_period_negative(params, default_date, total_value, config):
-    return distribute_over_period(params, default_date, -total_value, config)
+def distribute_over_period_negative(params, total_value, config):
+    return distribute_over_period(params, -total_value, config)
 
 
 def spread(entries, options_map, config_string=""):
