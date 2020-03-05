@@ -54,6 +54,14 @@ def split(entries, options_map, config_string=""):
 
         # For selected entries add new entries.
         trashbin.append(tx)
+
+        # Need to remove plugin metadata because otherwise new_whole_entries will copy it
+        # to generated transactions, which is not the behaviour described in the docs.
+        # TODO: Remove if alias is used as well. Should we just remove all metadata, even
+        # that which is not associated with the plugin?  I guess the desired behaviour is
+        # never specified anywhere.
+        tx.meta.pop('split')
+
         newEntries = newEntries + new_whole_entries(tx, params, distribute_over_period, config)
 
     for trash in trashbin:
