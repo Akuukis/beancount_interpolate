@@ -7,6 +7,7 @@ from beancount.core.number import D
 
 from .common import extract_mark_tx
 from .common import extract_mark_posting
+from .common import parse_mark
 from .common import new_filtered_entries
 from .common import distribute_over_period
 from .common import read_config
@@ -63,10 +64,12 @@ def spread(entries, options_map, config_string=""):
             if not params:
                 continue
 
+            period = parse_mark(params, tx.date, config)
+
             for translation in config['translations']:
                 if posting.account[0:len(translation)] == translation:
                     new_account = config['translations'][translation] + posting.account[len(translation):]
-                    selected_postings.append( (i, new_account, params, posting) )
+                    selected_postings.append( (i, new_account, period, posting) )
 
         # For selected postings change the original.
         for i, new_account, params, posting in selected_postings:
@@ -81,6 +84,6 @@ def spread(entries, options_map, config_string=""):
 
         # For selected postings add new postings bundled into entries.
         if len(selected_postings) > 0:
-            newEntries = newEntries + new_filtered_entries(tx, params, distribute_over_period_negative, selected_postings, config)
+            newEntries = newEntries + new_filtered_entries(tx, period, distribute_over_period_negative, selected_postings, config)
 
     return entries + newEntries, errors

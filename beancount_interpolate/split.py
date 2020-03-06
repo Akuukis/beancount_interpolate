@@ -5,6 +5,7 @@ from beancount.core.data import filter_txns
 from beancount.core.number import D
 
 from .common import extract_mark_tx
+from .common import parse_mark
 from .common import distribute_over_period
 from .common import new_whole_entries
 from .common import read_config
@@ -62,7 +63,9 @@ def split(entries, options_map, config_string=""):
         # never specified anywhere.
         tx.meta.pop('split')
 
-        newEntries = newEntries + new_whole_entries(tx, params, distribute_over_period, config)
+        period = parse_mark(params, tx.date, config)
+
+        newEntries = newEntries + new_whole_entries(tx, period, distribute_over_period, config)
 
     for trash in trashbin:
         entries.remove(trash)
