@@ -5,6 +5,7 @@ from beancount.core.data import filter_txns
 from beancount.core.data import Posting
 from beancount.core.number import D
 
+from .parser import find_marked
 from .common import extract_mark_tx
 from .common import extract_mark_posting
 from .common import parse_mark
@@ -15,8 +16,8 @@ from .common import read_config
 __plugins__ = ['spread']
 
 
-def distribute_over_period_negative(params, total_value, config):
-    return distribute_over_period(params, -total_value, config)
+def distribute_over_period_negative(period, total_value, config):
+    return distribute_over_period(period, -total_value, config)
 
 
 def spread(entries, options_map, config_string=""):
@@ -52,27 +53,21 @@ def spread(entries, options_map, config_string=""):
     }
 
     newEntries = []
-    for tx in filter_txns(entries):
+
+    unmarked_entries, marked_entries = find_marked(entries, config)
+
+    for tx, period in marked_entries:
 
         # Spread at posting level because not all account types may be eligible.
         selected_postings = []
         for i, posting in enumerate(tx.postings):
-            # We are interested in only marked postings. TODO: ALIASES_BEFORE.
-            params = extract_mark_posting(posting, config) \
-                  or extract_mark_tx(tx, config) \
-                  or False
-            if not params:
-                continue
-
-            period = parse_mark(params, tx.date, config)
-
             for translation in config['translations']:
                 if posting.account[0:len(translation)] == translation:
                     new_account = config['translations'][translation] + posting.account[len(translation):]
-                    selected_postings.append( (i, new_account, period, posting) )
+                    selected_postings.append((i, new_account, posting))
 
         # For selected postings change the original.
-        for i, new_account, params, posting in selected_postings:
+        for i, new_account, posting in selected_postings:
             tx.postings.pop(i)
             tx.postings.insert(i, Posting(
                 account=new_account,
@@ -86,4 +81,4 @@ def spread(entries, options_map, config_string=""):
         if len(selected_postings) > 0:
             newEntries = newEntries + new_filtered_entries(tx, period, distribute_over_period_negative, selected_postings, config)
 
-    return entries + newEntries, errors
+    return unmarked_entries + marked_entries + newEntries, errors

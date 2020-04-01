@@ -4,6 +4,7 @@ from beancount.core.amount import Amount
 from beancount.core.data import filter_txns
 from beancount.core.number import D
 
+from .parser import find_marked
 from .common import extract_mark_tx
 from .common import parse_mark
 from .common import distribute_over_period
@@ -41,20 +42,11 @@ def split(entries, options_map, config_string=""):
         'tag'             : config_obj.pop('tag'             , 'splitted'),
     }
 
+    unmarked, marked = find_marked(entries, config)
+
     newEntries = []
     trashbin = []
-    for tx in filter_txns(entries):
-
-        # Split at entry level only, so that it balances.
-        pass
-
-        # We are interested in only marked entries. TODO: ALIASES_BEFORE.
-        params = extract_mark_tx(tx, config)
-        if not params:
-            continue
-
-        # For selected entries add new entries.
-        trashbin.append(tx)
+    for tx, period in marked:
 
         # Need to remove plugin metadata because otherwise new_whole_entries will copy it
         # to generated transactions, which is not the behaviour described in the docs.
@@ -63,11 +55,6 @@ def split(entries, options_map, config_string=""):
         # never specified anywhere.
         tx.meta.pop('split')
 
-        period = parse_mark(params, tx.date, config)
-
         newEntries = newEntries + new_whole_entries(tx, period, distribute_over_period, config)
 
-    for trash in trashbin:
-        entries.remove(trash)
-
-    return entries + newEntries, errors
+    return unmarked + newEntries, errors

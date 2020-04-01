@@ -5,8 +5,8 @@ Feature: Spread income or expense postings over a period
         Given the following beancount transaction:
             ;
             2016-06-15 * "The Company" "Salary for June"
+                spread: "Month @ 2016-06-01"
                 Income:TheCompany:NetSalary     -300.00 EUR
-                    spread: "Month @ 2016-06-01"
                 Assets:MyBank:Checking           300.00 EUR
 
         When the beancount-spread plugin is executed
@@ -51,8 +51,8 @@ Feature: Spread income or expense postings over a period
         Given the following beancount transaction:
             ;
             2016-06-15 * "The Company" "Internet bill for June"
+                spreadAfter: "Month @ 2016-06-15"
                 Expenses:Bills:Internet                        -75.00 EUR
-                    spreadAfter: "Month @ 2016-06-15"
                 Assets:MyBank:Checking                          75.00 EUR
 
         When the beancount-spread plugin is executed

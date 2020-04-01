@@ -127,7 +127,15 @@ def parse_mark(mark, default_date, config):
 
 # Infer Duration, start and steps. Spacing optinonal. Format: [123|KEYWORD] [@ YYYY-MM[-DD]] [/ step]
 # 0. max duration, 1. year, 2. month, 3. day, 4. min step
-RE_PARSING = re.compile(r"^\s*?([^-/\s]+)?\s*?(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?\s*?(?:\/\s*?([^-/\s]+)?\s*?)?$")
+RE_PARSING = re.compile(
+    r"^\s*?" # beginning whitespace
+    "([^-/\s]+)?" # optional length length
+    "\s*?" # whitespace
+    "(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?" # optional (year, month, optional day)
+    "\s*?" # whitespace
+    "(?:\/\s*?([^-/\s]+)?\s*?)?$" # optional step
+)
+
 def distribute_over_period(period, total_value, config):
     """
     Distribute value over points in time.
@@ -158,6 +166,7 @@ def distribute_over_period(period, total_value, config):
 
         if(abs(round_to(accumulated_remainder)) >= abs(round_to(config['min_value']))):
             adjusted_amount = D(str(round_to(accumulated_remainder)))
+            print(adjusted_amount)
             accumulated_remainder -= adjusted_amount
             #distribution.append((date, adjusted_amount))
             amounts.append(adjusted_amount)

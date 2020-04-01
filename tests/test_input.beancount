@@ -1,0 +1,70 @@
+; -*- mode: org; mode: beancount -*-
+2020-01-01 open Assets:Chequing
+2020-01-01 open Assets:Savings
+2020-01-01 open Assets:Emergency-Savings
+2020-01-01 open Assets:Accounts-Receivable:Work
+2020-01-01 open Income:Earnings
+2020-01-01 open Income:Vacation-Pay
+2020-01-01 open Expenses:Food
+2020-01-01 open Expenses:Internet
+2020-01-01 open Liabilities:CreditCard
+
+; Not marked, therefore should not be modified
+2020-01-20 * "Work" "Paycheque"
+  Assets:Chequing 1000.00 USD
+  Income:Earnings
+
+2020-01-03 * "Bought dinner"
+  Expenses:Food 22.00 USD
+  Assets:Chequing
+
+2020-01-20 * "Transfer to savings"
+  Assets:Savings 100.00 USD
+  Assets:Chequing 
+
+; Marked incorrectly, should not be modified and should produce an error
+
+2020-01-20 * "Weekly transfer to savings"
+  interpolate: ""
+  Assets:Savings 100.00 USD
+  Assets:Chequing 
+
+2020-01-21 * "Weekly transfer to savings"
+  interpolate: "blah"
+  Assets:Savings 100.00 USD
+  Assets:Chequing 
+
+2020-01-22 * "Weekly transfer to savings"
+  interpolate: "split blah"
+  Assets:Savings 100.00 USD
+  Assets:Chequing 
+
+; Should be removed and replaced with generated entries
+
+2020-01-20 * "Repeated transfer to savings"
+  interpolate: "recur 2020-01-20 - 2020-01-26"
+  Assets:Savings 100.00 USD
+  Assets:Chequing 
+
+2020-01-20 * "Split transfer to savings"
+  interpolate: "split 2020-01-20 - 2020-01-24"
+  Assets:Savings 100.00 USD
+  Assets:Emergency-Savings 50.00 USD
+  Assets:Chequing -150.00 USD
+  
+2020-01-28 * "Split with uneven division"
+  interpolate: "split 2020-01-28 - 2020-02-03"
+  Assets:Savings 15.00 USD
+  Assets:Emergency-Savings 23.0 USD
+  Assets:Chequing -38.00 USD
+
+2020-01-03 * "Paid internet bill"
+  interpolate: "split 2020-01-03 - 2020-02-01"
+  Expenses:Internet 60.00 USD
+  Assets:Chequing
+
+;2020-01-27 * "Work" "Accrued earnings"
+;  interpolate: "split 2020-01-09 - 2020-02-22"
+;  Income:Earnings 850.00 USD
+;  Income:Vacation-Pay 20.00 USD
+;  Assets:Accounts-Receivable:Work
