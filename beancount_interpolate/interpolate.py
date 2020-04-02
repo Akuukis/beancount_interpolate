@@ -6,15 +6,11 @@ from beancount.core import data
 from beancount.core.number import D
 from beancount.parser import printer
 
-from .parser import find_marked
-from .parser import parse_mark
+from .parser import parse_entries
+from .distribution import distribute_whole_postings, distribute_fraction_even_postings
 from .common import read_config
 
 __plugins__ = ['interpolate']
-
-def round_to(decim):
-    f = round(decim*100)/100
-    return D("{:.2f}".format(f))
 
 def interpolate(entries, options_map, config_string=""):
     """
@@ -28,102 +24,82 @@ def interpolate(entries, options_map, config_string=""):
       A tuple of entries and errors.
     """
 
-    errors = []
+    commands_map = {
+        'recur': recur,
+        'split': split,
+        'spread': spread,
+        'depr': depreciate
+    }
 
-    ignored, identified = find_marked(entries)
+    ignored_entries, parsed_entries, parsing_errors = parse_entries(entries, commands_map.keys())
 
+    errors = parsing_errors
     new_entries = []
-    for txn in identified:
-        try:
-            command, dates = parse_mark(txn.meta["interpolate"])
-        except Exception as e:
-            errors.append(e)
-            ignored.append(txn)
-            continue
-
-        distributions = []
-        for posting in txn.postings[:-1]:
-            if command == 'split':
-                distributions.append(distribute(dates, posting.units.number))
-            elif command == 'recur':
-                distributions.append(duplicate(dates, posting.units.number))
-
-        last_posting_distribution = []
-        for i in range(len(dates)):
-            summation = 0
-            for j in range(len(distributions)):
-                summation += distributions[j][i]
-            last_posting_distribution.append(-summation)
-
-        distributions.append(last_posting_distribution)
-            
-        for i, date in enumerate(dates):
-
-            new_postings = []
-
-            for j, old_posting in enumerate(txn.postings):
-                new_postings.append(data.Posting(
-                    old_posting.account,
-                    Amount(distributions[j][i], old_posting.units.currency),
-                    old_posting.cost,
-                    old_posting.price,
-                    old_posting.flag,
-                    old_posting.meta))
-                
-            new_entries.append(data.Transaction(
-                date=date,
-                meta=data.new_metadata(__name__, i),
-                flag=txn.flag,
-                payee=txn.payee,
-                narration=txn.narration + " (interpolated {}/{})".format(i+1, len(dates)),
-                tags=txn.tags,
-                links=txn.links,
-                postings=new_postings))
-
-    for e in errors:
-        print(e)
+    for command, dates, txn in parsed_entries:
+        generated_txns, generation_errors = commands_map[command](txn, dates)
+        new_entries.extend(generated_txns)
+        errors.extend(generation_errors)
 
     printer.print_entries(new_entries)
-    return ignored + new_entries, errors, options_map
+    return ignored_entries + new_entries, errors, options_map
 
-def duplicate(dates, total_value):
-    distribution = []
-    for date in dates:
-        distribution.append(total_value)
+def new_txn(old_txn, new_date, new_posting_values, narration_suffix):
+    new_postings = []
+    for old_posting, new_value in zip(old_txn.postings, new_posting_values):
+        new_units = Amount(new_value, old_posting.units.currency)
+        new_postings.append(data.Posting(
+            old_posting.account,
+            new_units, 
+            old_posting.cost,
+            old_posting.price,
+            old_posting.flag,
+            old_posting.meta))
 
-    return distribution
+    return data.Transaction(
+        date=new_date,
+        meta=data.new_metadata(__name__, 0),
+        flag=old_txn.flag,
+        payee=old_txn.payee,
+        narration=old_txn.narration + narration_suffix,
+        tags=old_txn.tags,
+        links=old_txn.links,
+        postings=new_postings)
 
-def distribute(dates, total_value):
-    """
-    Distribute value over points in time.
+def recur(txn, dates):
 
-    Args:
-        params: string of period.
-        default_date: date to fallback to.
-        total_value: decimal of total value.
-        config: A configuration string in JSON format given in source file.
-    Returns:
-        A tuple of list of decimals and list of dates.
-    """
+    values_matrix = distribute_whole_postings(txn.postings, dates)
 
-    distribution = []
-    accumulated_remainder = D(str(0))
+    new_entries = []
+    for i, date in enumerate(dates):
 
-    # The exact amount to be distributed over each day in the period before
-    # rounding and other adjustments
-    exact_amount = total_value/len(dates)
+        # The postings values for the a new transaction based on the ith date
+        # will be the i-th column in the matrix of new posting values
+        new_posting_values = [row[i] for row in values_matrix]
+        narration_suffix = " (interpolated {}/{})".format(i+1, len(dates))
 
-    for date in dates:
-        accumulated_remainder += exact_amount
+        new_entries.append(new_txn(txn, date, new_posting_values, narration_suffix))
 
-        adjusted_amount = round_to(accumulated_remainder)
+    return new_entries, []
 
-        print(adjusted_amount)
-        accumulated_remainder -= adjusted_amount
+def split(txn, dates):
 
-        distribution.append(adjusted_amount)
+    values_matrix = distribute_fraction_even_postings(txn.postings, dates)
 
-        if(date > dt.date.today()):
-            break
+    new_entries = []
+    for i, date in enumerate(dates):
 
-    return distribution
+        # The postings values for the a new transaction based on the ith date
+        # will be the i-th column in the matrix of new posting values
+        new_posting_values = [row[i] for row in values_matrix]
+        narration_suffix = " (interpolated {}/{})".format(i+1, len(dates))
+
+        new_entries.append(new_txn(txn, date, new_posting_values, narration_suffix))
+
+    return new_entries, []
+
+
+def spread(txn, dates):
+    pass
+
+def depreciate():
+    pass

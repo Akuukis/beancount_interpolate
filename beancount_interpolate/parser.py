@@ -2,6 +2,7 @@ import datetime
 import calendar
 import math
 import re
+from itertools import compress
 from beancount.core.number import D
 from beancount.core.amount import Amount, mul
 from beancount.core.data import Transaction
@@ -10,31 +11,39 @@ from beancount.parser import printer
 
 from collections import namedtuple
 
-def find_marked(entries):
+def parse_entries(entries, valid_commands):
 
     ignored = []
-    identified = []
+    parsed = []
+    errors = []
 
     for entry in entries:
-        if isinstance(entry, data.Transaction)\
-           and hasattr(entry, 'meta') \
-           and entry.meta \
-           and "interpolate" in entry.meta:
-                identified.append(entry)
+        if isinstance(entry, data.Transaction) and hasattr(entry, 'meta') and entry.meta: 
+
+            # Get the keys from entry.meta that are valid commands
+            found_commands = [key in valid_commands for key in list(entry.meta.keys())]
+            command_keys = list(compress(entry.meta.keys(), found_commands))
+
+            try:
+                if len(command_keys) == 0:
+                    ignored.append(entry)
+                elif len(command_keys) == 1:
+                    command = command_keys[0]
+                    mark = entry.meta[command]
+                    dates = _parse_mark(entry.meta[command], entry.date)
+                    parsed.append((command, dates, entry))
+                elif len(command_keys) > 1:
+                    raise SyntaxError("Multiple commands associated with transaction")
+            except SyntaxError as e:
+                errors.append(e)
+                ignored.append(entry)
         else:
             ignored.append(entry)
 
-    return (ignored, identified)
+    return (ignored, parsed, errors)
 
-RE_PARSING = re.compile(
-    r"^([a-z]+)" # command
-    "\s*?" # whitespace
-    "([0-9]{4}-[0-9]{2}-[0-9]{2})" # date
-    "\s*?-\s*?" # whitespace dash whitespace
-    "([0-9]{4}-[0-9]{2}-[0-9]{2})" # date
-)
 
-def parse_mark(mark):
+def _parse_mark(mark, txn_date):
     """
     Parse mark into list of dates
 
@@ -43,24 +52,56 @@ def parse_mark(mark):
     Returns:
         A list of datetime dates
     """
+    # Parse strings a, b, and c from mark < a [@ b] [/ c] >
+    #    b and c are optional, a is not 
+    #    a, b, and c cannot include /, @, or whitespace characters
+    #    whitespace is optional everywhere else
+    RE_PARSING = re.compile(r"(?:^\s*([^@/\s]+)\s*)(?:@\s*([^@/\s]+)\s*)?(?:\/\s*([^@/\s]+)\s*)?$")
+
     matches = re.findall(RE_PARSING, mark)
 
-    if matches and len(matches[0]) == 3:
-        command = matches[0][0]
-        start = datetime.date.fromisoformat(matches[0][1])
-        end = datetime.date.fromisoformat(matches[0][2])
-    else:
-        raise SyntaxError('Could not parse mark:', mark)
+    if len(matches) == 0:
+        raise SyntaxError("RE parser found zero matches")
+    if len(matches) > 1:
+        raise SyntaxError("RE parser found more than one match")
+
+    parts = matches[0]
+
+    start_date = txn_date
+    step = 1
+
+    try:
+        if parts[1]:
+            start_date = datetime.date.fromisoformat(parts[1])
+    except Exception as e:
+        raise SyntaxError('Could not parse start date: ' + str(e))
+
+    try:
+        if parts[2]:
+            step = _parse_length(parts[2])
+    except Exception as e:
+        raise SyntaxError('Could not parse start step: ' + str(e))
+
+    end_date = None
+    try:
+        end_date = datetime.date.fromisoformat(parts[0])
+    except Exception as e1:
+        try:
+            duration = _parse_length(parts[0])
+            end_date = start_date + datetime.timedelta(days=(duration-1))
+        except Exception as e2:
+            raise SyntaxError('Could not parse end date <or> duration: ' + str(e1) + " <or> " + str(e2))
 
 
     dates = []
-    delta = end - start
-    for i in range(delta.days + 1):
-        dates.append(start + datetime.timedelta(i))
-    
-    return (command, dates)
+    date = start_date
+    while date <= end_date:
+        dates.append(date)
+        date += datetime.timedelta(days=step)
 
-def parse_length(int_or_string):
+    return dates
+
+def _parse_length(int_or_string):
     """
     Parses integer length or keywords into number of days.
 
