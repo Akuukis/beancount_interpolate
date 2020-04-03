@@ -4,12 +4,13 @@ from beancount.core.compare import compare_entries
 
 from context import interpolate
 
-def test_plugin():
+def test_interpolate():
     
     infile_entries, infile_errors, _ = loader.load_file("test_input.beancount")
     assert not infile_errors
 
     outfile_entries, outfile_errors, _ = loader.load_file("test_output.beancount")
+    print(outfile_errors)
     assert not outfile_errors
 
     test_entries, test_errors, _ = interpolate.interpolate(infile_entries, [], {})

@@ -3,7 +3,9 @@
 2020-01-01 open Assets:Savings
 2020-01-01 open Assets:Emergency-Savings
 2020-01-01 open Assets:Accounts-Receivable:Work
-2020-01-01 open Income:Earnings
+2020-01-01 open Assets:Unpaid-Earnings:Wages
+2020-01-01 open Assets:Unpaid-Earnings:Vacation-Pay
+2020-01-01 open Income:Wages
 2020-01-01 open Income:Vacation-Pay
 2020-01-01 open Expenses:Food
 2020-01-01 open Expenses:Internet
@@ -12,7 +14,7 @@
 ; Not marked, therefore should not be modified
 2020-01-20 * "Work" "Paycheque"
   Assets:Chequing 1000.00 USD
-  Income:Earnings
+  Income:Wages
 
 2020-01-03 * "Bought dinner"
   Expenses:Food 22.00 USD
@@ -248,3 +250,92 @@
 2020-02-01 * "Paid internet bill (interpolated 30/30)"
   Expenses:Internet 2.00 USD
   Assets:Chequing
+
+2020-03-09 * "Work" "Accrued earnings (interpolated 1/14)"
+  Income:Wages                         -60.71 USD
+  Assets:Unpaid-Earnings:Wages          60.71 USD
+  Income:Vacation-Pay                   -1.43 USD
+  Assets:Unpaid-Earnings:Vacation-Pay    1.43 USD
+
+2020-03-10 * "Work" "Accrued earnings (interpolated 2/14)"
+  Income:Wages                         -60.72 USD
+  Assets:Unpaid-Earnings:Wages          60.72 USD
+  Income:Vacation-Pay                   -1.43 USD
+  Assets:Unpaid-Earnings:Vacation-Pay    1.43 USD
+
+2020-03-11 * "Work" "Accrued earnings (interpolated 3/14)"
+  Income:Wages                         -60.71 USD
+  Assets:Unpaid-Earnings:Wages          60.71 USD
+  Income:Vacation-Pay                   -1.43 USD
+  Assets:Unpaid-Earnings:Vacation-Pay    1.43 USD
+
+2020-03-12 * "Work" "Accrued earnings (interpolated 4/14)"
+  Income:Wages                         -60.72 USD
+  Assets:Unpaid-Earnings:Wages          60.72 USD
+  Income:Vacation-Pay                   -1.42 USD
+  Assets:Unpaid-Earnings:Vacation-Pay    1.42 USD
+
+2020-03-13 * "Work" "Accrued earnings (interpolated 5/14)"
+  Income:Wages                         -60.71 USD
+  Assets:Unpaid-Earnings:Wages          60.71 USD
+  Income:Vacation-Pay                   -1.43 USD
+  Assets:Unpaid-Earnings:Vacation-Pay    1.43 USD
+
+2020-03-14 * "Work" "Accrued earnings (interpolated 6/14)"
+  Income:Wages                         -60.72 USD
+  Assets:Unpaid-Earnings:Wages          60.72 USD
+  Income:Vacation-Pay                   -1.43 USD
+  Assets:Unpaid-Earnings:Vacation-Pay    1.43 USD
+
+2020-03-15 * "Work" "Accrued earnings (interpolated 7/14)"
+  Income:Wages                         -60.71 USD
+  Assets:Unpaid-Earnings:Wages          60.71 USD
+  Income:Vacation-Pay                   -1.43 USD
+  Assets:Unpaid-Earnings:Vacation-Pay    1.43 USD
+
+2020-03-16 * "Work" "Accrued earnings (interpolated 8/14)"
+  Income:Wages                         -60.71 USD
+  Assets:Unpaid-Earnings:Wages          60.71 USD
+  Income:Vacation-Pay                   -1.43 USD
+  Assets:Unpaid-Earnings:Vacation-Pay    1.43 USD
+
+2020-03-17 * "Work" "Accrued earnings (interpolated 9/14)"
+  Income:Wages                         -60.72 USD
+  Assets:Unpaid-Earnings:Wages          60.72 USD
+  Income:Vacation-Pay                   -1.43 USD
+  Assets:Unpaid-Earnings:Vacation-Pay    1.43 USD
+
+2020-03-18 * "Work" "Accrued earnings (interpolated 10/14)"
+  Income:Wages                         -60.71 USD
+  Assets:Unpaid-Earnings:Wages          60.71 USD
+  Income:Vacation-Pay                   -1.43 USD
+  Assets:Unpaid-Earnings:Vacation-Pay    1.43 USD
+
+2020-03-19 * "Work" "Accrued earnings (interpolated 11/14)"
+  Income:Wages                         -60.72 USD
+  Assets:Unpaid-Earnings:Wages          60.72 USD
+  Income:Vacation-Pay                   -1.42 USD
+  Assets:Unpaid-Earnings:Vacation-Pay    1.42 USD
+
+2020-03-20 * "Work" "Accrued earnings (interpolated 12/14)"
+  Income:Wages                         -60.71 USD
+  Assets:Unpaid-Earnings:Wages          60.71 USD
+  Income:Vacation-Pay                   -1.43 USD
+  Assets:Unpaid-Earnings:Vacation-Pay    1.43 USD
+
+2020-03-21 * "Work" "Accrued earnings (interpolated 13/14)"
+  Income:Wages                         -60.72 USD
+  Assets:Unpaid-Earnings:Wages          60.72 USD
+  Income:Vacation-Pay                   -1.43 USD
+  Assets:Unpaid-Earnings:Vacation-Pay    1.43 USD
+
+2020-03-22 * "Work" "Accrued earnings (interpolated 14/14)"
+  Income:Wages                         -60.71 USD
+  Assets:Unpaid-Earnings:Wages          60.71 USD
+  Income:Vacation-Pay                   -1.43 USD
+  Assets:Unpaid-Earnings:Vacation-Pay    1.43 USD
+
+2020-03-27 * "Work" "Accrued earnings (modified by interpolate)"
+  Assets:Unpaid-Earnings:Wages         -850.00 USD
+  Assets:Unpaid-Earnings:Vacation-Pay   -20.00 USD
+  Assets:Accounts-Receivable:Work       870.00 USD

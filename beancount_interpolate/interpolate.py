@@ -7,7 +7,8 @@ from beancount.core.number import D
 from beancount.parser import printer
 
 from .parser import parse_entries
-from .distribution import distribute_whole_postings, distribute_fraction_even_postings
+from .generator import new_txns, copy_posting, copy_txn
+from .distributor import distribute_whole_postings, distribute_fraction_even_postings
 from .common import read_config
 
 __plugins__ = ['interpolate']
@@ -43,63 +44,46 @@ def interpolate(entries, options_map, config_string=""):
     printer.print_entries(new_entries)
     return ignored_entries + new_entries, errors, options_map
 
-def new_txn(old_txn, new_date, new_posting_values, narration_suffix):
-    new_postings = []
-    for old_posting, new_value in zip(old_txn.postings, new_posting_values):
-        new_units = Amount(new_value, old_posting.units.currency)
-        new_postings.append(data.Posting(
-            old_posting.account,
-            new_units, 
-            old_posting.cost,
-            old_posting.price,
-            old_posting.flag,
-            old_posting.meta))
-
-    return data.Transaction(
-        date=new_date,
-        meta=data.new_metadata(__name__, 0),
-        flag=old_txn.flag,
-        payee=old_txn.payee,
-        narration=old_txn.narration + narration_suffix,
-        tags=old_txn.tags,
-        links=old_txn.links,
-        postings=new_postings)
-
 def recur(txn, dates):
-
     values_matrix = distribute_whole_postings(txn.postings, dates)
-
-    new_entries = []
-    for i, date in enumerate(dates):
-
-        # The postings values for the a new transaction based on the ith date
-        # will be the i-th column in the matrix of new posting values
-        new_posting_values = [row[i] for row in values_matrix]
-        narration_suffix = " (interpolated {}/{})".format(i+1, len(dates))
-
-        new_entries.append(new_txn(txn, date, new_posting_values, narration_suffix))
-
-    return new_entries, []
+    return new_txns(txn, dates, values_matrix), []
 
 def split(txn, dates):
-
     values_matrix = distribute_fraction_even_postings(txn.postings, dates)
-
-    new_entries = []
-    for i, date in enumerate(dates):
-
-        # The postings values for the a new transaction based on the ith date
-        # will be the i-th column in the matrix of new posting values
-        new_posting_values = [row[i] for row in values_matrix]
-        narration_suffix = " (interpolated {}/{})".format(i+1, len(dates))
-
-        new_entries.append(new_txn(txn, date, new_posting_values, narration_suffix))
-
-    return new_entries, []
-
+    return new_txns(txn, dates, values_matrix), []
 
 def spread(txn, dates):
-    pass
 
+    updated_txn_postings = []
+    template_postings = []
+    for posting in txn.postings:
+        # TODO if "interpolate" in posting.tags:
+        if hasattr(posting, "meta") and "interpolate" in posting.meta.keys():
+            new_account = posting.meta["interpolate"]
+            template_postings.append(posting)
+            template_postings.append(copy_posting(posting, account=new_account, units=-posting.units))
+            updated_txn_postings.append(copy_posting(posting, account=new_account))
+        else:
+            updated_txn_postings.append(posting)
+
+    template_txn = copy_txn(txn, postings=template_postings)
+    new_entries, errors = split(template_txn, dates)
+
+    new_narration = txn.narration + " (modified by interpolate)"
+    updated_txn = copy_txn(txn, narration=new_narration, postings=updated_txn_postings)
+    new_entries.append(updated_txn)
+
+    return new_entries, errors
+    
 def depreciate():
     pass
+
+def read_config(config_string):
+    if len(config_string) == 0:
+        config_obj = {}
+    else:
+        config_obj = eval(config_string, {}, {})
+
+    if not isinstance(config_obj, dict):
+        raise RuntimeError("Invalid plugin configuration: should be a single dict.")
+    return config_obj
