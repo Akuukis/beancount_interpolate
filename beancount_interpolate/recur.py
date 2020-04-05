@@ -1,4 +1,6 @@
 __author__ = 'Akuukis <akuukis@kalvis.lv'
+import datetime
+import math
 
 from beancount.core.amount import Amount
 from beancount.core.data import filter_txns
@@ -7,16 +9,28 @@ from beancount.core.number import D
 from .common import extract_mark_tx
 from .common import new_whole_entries
 from .common import read_config
+from .common import parse_mark
 
 __plugins__ = ['recur']
 
 
-def dublicate_over_period(period, value, config):
-    amounts = []
-    for i in range(period):
-        amounts.append( D(str(value)) )
+def dublicate_over_period(params, default_date, value, config):
+    begin_date, duration, step = parse_mark(params, default_date, config)
+    period = math.floor( duration / step )
 
-    return amounts
+    if(period > config['max_new_tx']):
+        period = config['max_new_tx']
+        duration = period * step
+
+    dates = []
+    amounts = []
+    date = begin_date
+    while date < begin_date + datetime.timedelta(days=duration) and date <= datetime.date.today():
+        amounts.append( D(str(value)) )
+        dates.append(date)
+        date = date + datetime.timedelta(days=step)
+
+    return (dates, amounts)
 
 
 def recur(entries, options_map, config_string):
