@@ -105,8 +105,8 @@ def distribute_over_period(params, default_date, total_value, config):
     begin_date, duration, step = parse_mark(params, default_date, config)
     period = math.floor( duration / step )
 
-    if(period > config['max_new_tx']):
-        period = config['max_new_tx']
+    if(period > config['max_new_txn']):
+        period = config['max_new_txn']
         duration = period * step
 
     dates = []
