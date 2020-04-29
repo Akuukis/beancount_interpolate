@@ -20,7 +20,7 @@ Feature: Spread income or expense postings over a period
                 Assets:MyBank:Checking                          300.00 EUR
 
         And 30 new transactions should be generated
-    
+
         And the newly generated transactions should include:
             ;
             ; Each new transaction transfers a fraction of the balance in the
@@ -33,7 +33,7 @@ Feature: Spread income or expense postings over a period
             2016-06-02 * "The Company" "Salary for June (spread 2/30)" #spreaded
                 Liabilities:Current:TheCompany:NetSalary         10.0 EUR
                 Income:TheCompany:NetSalary                     -10.0 EUR
-        
+
             2016-06-03 * "The Company" "Salary for June (spread 3/30)" #spreaded
                 Liabilities:Current:TheCompany:NetSalary         10.0 EUR
                 Income:TheCompany:NetSalary                     -10.0 EUR
@@ -44,7 +44,7 @@ Feature: Spread income or expense postings over a period
             2016-06-30 * "The Company" "Salary for June (spread 30/30)" #spreaded
                 Liabilities:Current:TheCompany:NetSalary         10.0 EUR
                 Income:TheCompany:NetSalary                     -10.0 EUR
-        
+
 
     Scenario: Spread utility bill expenses over billing period
 
@@ -67,7 +67,7 @@ Feature: Spread income or expense postings over a period
                 Assets:MyBank:Checking                          75.00 EUR
 
         And 30 new transactions should be generated
-    
+
         And the newly generated transactions should include:
             ;
             ; Each new transaction transfers a fraction of the balance in the
@@ -81,7 +81,7 @@ Feature: Spread income or expense postings over a period
             2016-06-16 * "The Company" "Internet bill for June (spread 2/30)" #spreaded
                 Assets:Current:Bills:Internet                    2.5 EUR
                 Expenses:Bills:Internet                         -2.5 EUR
-        
+
             2016-06-17 * "The Company" "Internet bill for June (spread 3/30)" #spreaded
                 Assets:Current:Bills:Internet                    2.5 EUR
                 Expenses:Bills:Internet                         -2.5 EUR

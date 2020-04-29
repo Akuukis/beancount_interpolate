@@ -15,7 +15,7 @@ Feature: Configure parser defaults and output format
                 Assets:Chequing
 
         Then the generated transactions should look like:
-            ; 
+            ;
             2020-01-01 * "Example transaction (recur 1/5)" #customtag
                 Assets:Savings   10.00 USD
                 Assets:Chequing
@@ -35,7 +35,7 @@ Feature: Configure parser defaults and output format
                 Assets:Chequing
 
         Then the generated transactions should look like:
-            ; 
+            ;
             2020-01-01 * "Example transaction [CUSTOMSUFFIX 1 out of 5]" #recurred
                 Assets:Savings   10.00 USD
                 Assets:Chequing
@@ -44,7 +44,7 @@ Feature: Configure parser defaults and output format
 
         Given the following configuration:
             {
-                'max_new_txn': 1000
+                'max_new_tx': 1000
             }
         And the following transaction:
             ;
@@ -85,7 +85,7 @@ Feature: Configure parser defaults and output format
                 Assets:Chequing
 
         Then the transactions generated should be:
-            ; 
+            ;
             2020-01-01 * "Example transaction (recur 1/2)" #recurred
                 Assets:Savings   10.00 USD
                 Assets:Chequing
@@ -114,7 +114,7 @@ Feature: Configure parser defaults and output format
         Given the following configuration:
             {
                 'spread': {
-                    'account_liab': 'Liabilities:Custom:Account' 
+                    'account_liab': 'Liabilities:Custom:Account'
                 }
             }
         And the following transaction:
@@ -122,13 +122,13 @@ Feature: Configure parser defaults and output format
             2020-01-01 * "Example transaction"
                 spread: "3"
                 Assets:Chequing 300.00 USD
-                Income:TempJob   
+                Income:TempJob
 
         Then the transactions generated should be:
             ;
             2020-01-01 * "Example transaction"
                 Assets:Chequing 300.00 USD
-                Liabilities:Custom:Account:TempJob   
+                Liabilities:Custom:Account:TempJob
 
             2020-01-01 * "Example transaction (spread 1/3)" #spreaded
                 Liabilities:Custom:Account:TempJob   100.0 USD
@@ -141,13 +141,13 @@ Feature: Configure parser defaults and output format
             2020-01-03 * "Example transaction (spread 3/3)" #spreaded
                 Liabilities:Custom:Account:TempJob   100.0 USD
                 Income:TempJob
-    
+
     Scenario: Change the assets account used by the depreciate command
 
         Given the following configuration:
             {
                 'depr': {
-                    'account_assets': 'Assets:Custom:Account' 
+                    'account_assets': 'Assets:Custom:Account'
                 }
             }
         And the following transaction:
@@ -161,7 +161,7 @@ Feature: Configure parser defaults and output format
             ;
             2020-01-01 * "Example transaction"
                 Assets:Custom:Account:ExampleItem 300.00 USD
-                Assets:Chequing 
+                Assets:Chequing
 
             2020-01-01 * "Example transaction (depr 1/3)" #depreciated
                 Assets:Custom:Account:ExampleItem   -100.0 USD
@@ -174,4 +174,3 @@ Feature: Configure parser defaults and output format
             2020-01-03 * "Example transaction (depr 3/3)" #depreciated
                 Assets:Custom:Account:ExampleItem  -100.0 USD
                 Expenses:Depreciation:ExampleItem
-    

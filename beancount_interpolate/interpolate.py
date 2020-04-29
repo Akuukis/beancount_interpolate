@@ -20,7 +20,7 @@ def interpolate(entries, options_map, user_config_string=""):
     """
     Entry point for single plugin structure.
     Currently a wrapper around interpolate_subset that passes a selection of commands.
-    
+
     Args:
         entries: list of entries to process
         options_map: map of beancount options
@@ -34,7 +34,7 @@ def interpolate(entries, options_map, user_config_string=""):
             'alias_seperator': '-',
             'default_duration': 'inf',
             'default_step': 'Day',
-            'max_new_txn': 9999,
+            'max_new_tx': 9999,
             'min_value': 0.05,
             'tag': 'recurred',
             'suffix': ' (recur %d/%d)',
@@ -44,7 +44,7 @@ def interpolate(entries, options_map, user_config_string=""):
             'alias_seperator': '-',
             'default_duration': 'Month',
             'default_step': 'Day',
-            'max_new_txn': 9999,
+            'max_new_tx': 9999,
             'min_value': 0.05,
             'suffix': ' (split %d/%d)',
             'tag': 'splitted'
@@ -54,7 +54,7 @@ def interpolate(entries, options_map, user_config_string=""):
             'alias_seperator': '-',
             'default_duration': 'Month',
             'default_step': 'Day',
-            'max_new_txn': 9999,
+            'max_new_tx': 9999,
             'min_value': 0.05,
             'tag': 'spreaded',
             'suffix': ' (spread %d/%d)',
@@ -66,7 +66,7 @@ def interpolate(entries, options_map, user_config_string=""):
             'alias_seperator': '-',
             'default_duration': 'Year',
             'default_step': 'Day',
-            'max_new_txn': 9999,
+            'max_new_tx': 9999,
             'min_value': 0.05,
             'tag': 'depreciated',
             'suffix': ' (depr %d/%d)',
@@ -76,7 +76,7 @@ def interpolate(entries, options_map, user_config_string=""):
     }
 
     user_config = get_config(user_config_string, default_config)
-    
+
     return interpolate_subset(entries, options_map, user_config)
 
 def get_config(user_config_string, default_config):
@@ -113,7 +113,7 @@ def get_config(user_config_string, default_config):
 
 def interpolate_subset(entries, options_map, config_map):
     """
-    Temporary helper function that supports both single- or multi-plugin 
+    Temporary helper function that supports both single- or multi-plugin
     structures for beancount_interpolate
 
     Args:
@@ -139,7 +139,7 @@ def interpolate_subset(entries, options_map, config_map):
         all_errors.extend(command_errors)
 
     return entries, all_errors
-    
+
 #########################
 #                       #
 # Copied from recur.py  #
@@ -150,8 +150,8 @@ def dublicate_over_period(params, default_date, value, config):
     begin_date, duration, step = parse_mark(params, default_date, config)
     period = math.floor( duration / step )
 
-    if(period > config['max_new_txn']):
-        period = config['max_new_txn']
+    if(period > config['max_new_tx']):
+        period = config['max_new_tx']
         duration = period * step
 
     dates = []

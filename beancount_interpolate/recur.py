@@ -13,7 +13,7 @@ def recur(entries, options_map, config_string=""):
         'default_duration': config_obj.pop('default_duration', 'inf'),
         'default_step'    : config_obj.pop('default_step'    , 'Day'),
         'min_value' : D(str(config_obj.pop('min_value'       , 0.05))),
-        'max_new_txn'      : config_obj.pop('max_new_txn'      , 9999),
+        'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),
         'suffix'          : config_obj.pop('suffix'          , ' (recur %d/%d)'),
         'tag'             : config_obj.pop('tag'             , 'recurred'),
     }

@@ -22,7 +22,7 @@ def test_custom_suffix():
     pass
 
 @scenario('config_options.feature', 'Change the maximum number of transactions that can be generated')
-def test_max_new_txn():
+def test_max_new_tx():
     pass
 
 @scenario('config_options.feature', 'Change the default duration used for parsing marks')
@@ -104,7 +104,7 @@ def includes_correct_output_txns(output_txns, txn_string):
 def correct_num_txns_generated(output_txns, correct_num_to_generate):
 
     printer.print_entries(output_txns[:3])
-    assert len(output_txns) == correct_num_to_generate 
+    assert len(output_txns) == correct_num_to_generate
 
 @then(parsers.parse('the transactions generated should be:\n{txn_string}'))
 def correct_output_txns(output_txns, txn_string):
