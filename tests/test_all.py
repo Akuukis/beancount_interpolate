@@ -42,7 +42,7 @@ def original_txn_modified(output_txns, correctly_modified_txn_text):
     # Get correctly modified original transaction from feature file
     correctly_modified_txn = load_string(correctly_modified_txn_text)[0][0]
 
-    assert hash_entry(modified_txn) == hash_entry(correctly_modified_txn)
+    assert hash_entry(modified_txn, True) == hash_entry(correctly_modified_txn, True)
 
 @then(parsers.parse('the original transaction should be removed'))
 def original_txn_removed(input_txns, output_txns):
