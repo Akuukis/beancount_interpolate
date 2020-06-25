@@ -22,7 +22,7 @@ def output_txns():
     return list()
 
 
-@given(parsers.parse('the following beancount transaction:\n{input_txn_text}'))
+@given(parsers.parse('the following beancount transaction:{input_txn_text}'))
 def input_txns(input_txn_text):
     # Load the example beancount transaction from the feature file
     input_txns, _, _ = load_string(input_txn_text)
@@ -31,7 +31,7 @@ def input_txns(input_txn_text):
     assert len(input_txns) == 1
     return input_txns
 
-@then(parsers.parse('the original transaction should be modified:\n'
+@then(parsers.parse('the original transaction should be modified:'
                     '{correctly_modified_txn_text}'))
 def original_txn_modified(output_txns, correctly_modified_txn_text):
 
@@ -63,7 +63,7 @@ def correct_num_txns_generated(output_txns, correct_num_to_generate):
 
     assert len(generated_txns) == correct_num_to_generate
 
-@then(parsers.parse('the newly generated transactions should include:\n'
+@then(parsers.parse('the newly generated transactions should include:'
                     '{correctly_generated_txn_text}'))
 def newly_generated_txns(output_txns, correctly_generated_txn_text):
 
