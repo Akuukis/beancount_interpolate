@@ -20,7 +20,7 @@ def interpolate(entries, options_map, config_string=""):
     """
     Entry point for single plugin structure.
     Currently a wrapper around interpolate_subset that passes a selection of commands.
-    
+
     Args:
         entries: list of entries to process
         options_map: map of beancount options
@@ -38,7 +38,7 @@ def interpolate(entries, options_map, config_string=""):
 
 def interpolate_subset(entries, options_map, config_map):
     """
-    Temporary helper function that supports both single- or multi-plugin 
+    Temporary helper function that supports both single- or multi-plugin
     structures for beancount_interpolate
 
     Args:
@@ -64,7 +64,7 @@ def interpolate_subset(entries, options_map, config_map):
         all_errors.extend(command_errors)
 
     return entries, all_errors
-    
+
 #########################
 #                       #
 # Copied from recur.py  #
@@ -133,7 +133,8 @@ def recur(entries, options_map, config_string=""):
         # Need to remove plugin metadata because otherwise new_whole_entries will copy it
         # to generated transactions, which is not the behaviour described in the docs.
         # TODO: Remove if alias is used as well.
-        tx.meta.pop('recur')
+        if('recur' in tx.meta):
+            tx.meta.pop('recur')
 
         # For selected entries add new entries.
         trashbin.append(tx)
@@ -198,7 +199,8 @@ def split(entries, options_map, config_string=""):
         # TODO: Remove if alias is used as well. Should we just remove all metadata, even
         # that which is not associated with the plugin?  I guess the desired behaviour is
         # never specified anywhere.
-        tx.meta.pop('split')
+        if('split' in tx.meta):
+            tx.meta.pop('split')
 
         newEntries = newEntries + new_whole_entries(tx, params, distribute_over_period, config)
 
