@@ -75,6 +75,10 @@ def recur(entries, options_map, config_string):
 
         # For selected entries add new entries.
         trashbin.append(tx)
+
+        if('recur' in tx.meta):
+            tx.meta.pop('recur')
+
         newEntries = newEntries + new_whole_entries(tx, params, dublicate_over_period, config)
 
     for trash in trashbin:

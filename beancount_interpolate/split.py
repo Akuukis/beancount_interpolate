@@ -60,7 +60,9 @@ def split(entries, options_map, config_string=""):
         # TODO: Remove if alias is used as well. Should we just remove all metadata, even
         # that which is not associated with the plugin?  I guess the desired behaviour is
         # never specified anywhere.
-        tx.meta.pop('split')
+        if('split' in tx.meta):
+            tx.meta.pop('split')
+
 
         newEntries = newEntries + new_whole_entries(tx, params, distribute_over_period, config)
 
