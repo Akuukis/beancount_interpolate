@@ -16,7 +16,7 @@ from .common import read_config
 
 __plugins__ = ['interpolate']
 
-def interpolate(entries, options_map, config_string=""):
+def interpolate(entries, options_map, user_config_string=""):
     """
     Entry point for single plugin structure.
     Currently a wrapper around interpolate_subset that passes a selection of commands.
@@ -28,12 +28,87 @@ def interpolate(entries, options_map, config_string=""):
     Returns:
         list of entries, options, and errors
     """
+    default_config = {
+        'recur': {
+            'aliases_after': ['recurAfter', 'recur'],
+            'alias_seperator': '-',
+            'default_duration': 'inf',
+            'default_step': 'Day',
+            'max_new_tx': 9999,
+            'min_value': 0.05,
+            'tag': 'recurred',
+            'suffix': ' (recur %d/%d)',
+        },
+        'split': {
+            'aliases_after': ['splitAfter', 'split'],
+            'alias_seperator': '-',
+            'default_duration': 'Month',
+            'default_step': 'Day',
+            'max_new_tx': 9999,
+            'min_value': 0.05,
+            'suffix': ' (split %d/%d)',
+            'tag': 'splitted'
+        },
+        'spread': {
+            'aliases_after': ['spreadAfter', 'spread'],
+            'alias_seperator': '-',
+            'default_duration': 'Month',
+            'default_step': 'Day',
+            'max_new_tx': 9999,
+            'min_value': 0.05,
+            'tag': 'spreaded',
+            'suffix': ' (spread %d/%d)',
+            'account_assets': 'Assets:Current',
+            'account_liab': 'Liabilities:Current'
+        },
+        'depr': {
+            'aliases_after': ['deprAfter', 'depr'],
+            'alias_seperator': '-',
+            'default_duration': 'Year',
+            'default_step': 'Day',
+            'max_new_tx': 9999,
+            'min_value': 0.05,
+            'tag': 'depreciated',
+            'suffix': ' (depr %d/%d)',
+            'account_assets': 'Assets:Fixed',
+            'account_liab': 'Liabilities:Fixed'
+        }
+    }
 
-    # Will eventually parse this from config string
-    selected_commands_to_config_map = {'recur': '', 'split': '', 'spread': '', 'depr': ''}
+    user_config = get_config(user_config_string, default_config)
 
-    return interpolate_subset(entries, options_map, selected_commands_to_config_map)
+    return interpolate_subset(entries, options_map, user_config)
 
+def get_config(user_config_string, default_config):
+
+    user_config = {}
+    if len(user_config_string) > 0:
+        user_config = eval(user_config_string, {}, {})
+    if not isinstance(user_config, dict):
+        raise RuntimeError("Invalid plugin configuration: should be a single dict.")
+
+    # Expand global options to all commands
+    commands = default_config.keys()
+    global_options = [key for key in user_config if key not in commands]
+    for option in global_options:
+        for command in commands:
+            if command not in user_config:
+                user_config[command] = {}
+            if option not in user_config[command]:
+                user_config[command][option] = user_config[option]
+        del user_config[option]
+
+    # Copy all default options that were unset by the user into the user config
+    for command in commands:
+        if command not in user_config.keys():
+            #copy the whole configuration for that command
+            user_config[command] = default_config[command]
+        else:
+            for option in default_config[command]:
+                if option not in user_config[command].keys():
+                    user_config[command][option] = default_config[command][option]
+
+    return user_config
 
 
 def interpolate_subset(entries, options_map, config_map):
@@ -60,7 +135,7 @@ def interpolate_subset(entries, options_map, config_map):
     all_errors = []
 
     for command in config_map.keys():
-        entries, command_errors = commands_to_functions_map[command](entries, config_map[command])
+        entries, command_errors = commands_to_functions_map[command](entries, options_map, config_map[command])
         all_errors.extend(command_errors)
 
     return entries, all_errors
@@ -90,7 +165,7 @@ def dublicate_over_period(params, default_date, value, config):
     return (dates, amounts)
 
 
-def recur(entries, options_map, config_string=""):
+def recur(entries, options_map, config):
     """
     Beancount plugin: Dublicates all entry postings over time.
 
@@ -103,20 +178,6 @@ def recur(entries, options_map, config_string=""):
     """
 
     errors = []
-
-    ## Parse config and set defaults
-    config_obj = read_config(config_string)
-    config = {
-        # ALIASES_BEFORE  : config_obj.pop('aliases_before'  , ['recurBefore']),
-        'aliases_after'   : config_obj.pop('aliases_after'   , ['recurAfter', 'recur']),
-        'alias_seperator' : config_obj.pop('aliases_after'   , '-'),
-        'default_duration': config_obj.pop('default_duration', 'inf'),
-        'default_step'    : config_obj.pop('default_step'    , 'Day'),
-        'min_value' : D(str(config_obj.pop('min_value'       , 0.05))),
-        'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),
-        'suffix'          : config_obj.pop('suffix'          , ' (recur %d/%d)'),
-        'tag'             : config_obj.pop('tag'             , 'recurred'),
-    }
 
     newEntries = []
     trashbin = []
@@ -151,7 +212,7 @@ def recur(entries, options_map, config_string=""):
 #                       #
 #########################
 
-def split(entries, options_map, config_string=""):
+def split(entries, options_map, config):
     """
     Beancount plugin: Dublicates all entry postings over time at fraction of value.
 
@@ -164,20 +225,6 @@ def split(entries, options_map, config_string=""):
     """
 
     errors = []
-
-    ## Parse config and set defaults
-    config_obj = read_config(config_string)
-    config = {
-        # ALIASES_BEFORE  : config_obj.pop('aliases_before'  , ['splitBefore']),
-        'aliases_after'   : config_obj.pop('aliases_after'   , ['splitAfter', 'split']),
-        'alias_seperator' : config_obj.pop('aliases_after'   , '-'),
-        'default_duration': config_obj.pop('default_duration', 'Month'),
-        'default_step'    : config_obj.pop('default_step'    , 'Day'),
-        'min_value' : D(str(config_obj.pop('min_value'       , 0.05))),
-        'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),
-        'suffix'          : config_obj.pop('suffix'          , ' (split %d/%d)'),
-        'tag'             : config_obj.pop('tag'             , 'splitted'),
-    }
 
     newEntries = []
     trashbin = []
@@ -218,7 +265,7 @@ def split(entries, options_map, config_string=""):
 def distribute_over_period_negative(params, default_date, total_value, config):
     return distribute_over_period(params, default_date, -total_value, config)
 
-def spread(entries, options_map, config_string=""):
+def spread(entries, options_map, config):
     """
     Beancount plugin: Generate new entries to allocate P&L of target income/expense posting over given period.
 
@@ -231,24 +278,6 @@ def spread(entries, options_map, config_string=""):
     """
 
     errors = []
-
-    ## Parse config and set defaults
-    config_obj = read_config(config_string)
-    config = {
-      # aliases_before  : config_obj.pop('aliases_before'  , ['spreadBefore']),
-        'aliases_after'   : config_obj.pop('aliases_after'   , ['spreadAfter', 'spread']),
-        'alias_seperator' : config_obj.pop('seperator    '   , '-'),
-        'default_duration': config_obj.pop('default_duration', 'Month'),
-        'default_step'    : config_obj.pop('default_step'    , 'Day'),
-        'min_value' : D(str(config_obj.pop('min_value'       , 0.05))),
-        'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),
-        'suffix'          : config_obj.pop('suffix'          , ' (spread %d/%d)'),
-        'tag'             : config_obj.pop('tag'             , 'spreaded'),
-        'translations'    : {
-            config_obj.pop('account_expenses', 'Expenses'): config_obj.pop('account_assets'  , 'Assets:Current'),
-            config_obj.pop('account_income'  , 'Income')  : config_obj.pop('account_liab'    , 'Liabilities:Current'),
-        },
-    }
 
     newEntries = []
     for tx in filter_txns(entries):
@@ -278,6 +307,11 @@ def spread(entries, options_map, config_string=""):
                 price=None,
                 flag=None,
                 meta=None))
+        # Need to remove plugin metadata because otherwise new_filetered_entries will copy it
+        # to generated transactions, which is not the behaviour described in the docs.
+        # Needed to pass tests
+        tx.meta.pop('spread', None)
+
 
         # For selected postings add new postings bundled into entries.
         if len(selected_postings) > 0:
@@ -291,7 +325,7 @@ def spread(entries, options_map, config_string=""):
 #                            #
 ##############################
 
-def depreciate(entries, options_map, config_string=""):
+def depreciate(entries, options_map, config):
     """
     Beancount plugin: Generates new entries to depreciate target posting over given period.
 
@@ -302,26 +336,9 @@ def depreciate(entries, options_map, config_string=""):
     Returns:
       A tuple of entries and errors.
     """
+    print(config)
 
     errors = []
-
-    ## Parse config and set defaults
-    config_obj = read_config(config_string)
-    config = {
-      # aliases_before  : config_obj.pop('aliases_before'  , ['spreadBefore']),
-        'aliases_after'   : config_obj.pop('aliases_after'   , ['deprAfter', 'depr']),
-        'alias_seperator' : config_obj.pop('seperator    '   , '-'),
-        'default_duration': config_obj.pop('default_duration', 'Year'),
-        'default_step'    : config_obj.pop('default_step'    , 'Day'),
-        'min_value' : D(str(config_obj.pop('min_value'       , 0.05))),
-        'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),
-        'suffix'          : config_obj.pop('suffix'          , ' (depr %d/%d)'),
-        'tag'             : config_obj.pop('tag'             , 'depreciated'),
-        'translations'    : {
-            config_obj.pop('account_assets'  , 'Assets:Fixed')     : config_obj.pop('account_expenses', 'Expenses:Depreciation'),
-            config_obj.pop('account_liab'    , 'Liabilities:Fixed'): config_obj.pop('account_income'  , 'Income:Appreciation'),
-        },
-    }
 
     newEntries = []
     for tx in filter_txns(entries):
@@ -336,6 +353,9 @@ def depreciate(entries, options_map, config_string=""):
             if not params:
                 continue
 
+            posting.meta.pop('depr', None)
+
+            print("here")
             for translation in config['translations']:
                 if posting.account[0:len(translation)] == translation:
                     new_account = config['translations'][translation] + posting.account[len(translation):]
@@ -344,8 +364,14 @@ def depreciate(entries, options_map, config_string=""):
         # For selected postings no need to change the original.
         pass
 
+
         # For selected postings add new postings bundled into entries.
         if len(selected_postings) > 0:
+
+            # Need to remove plugin metadata because otherwise new_filetered_entries will copy it
+            # to generated transactions, which is not the behaviour described in the docs.
+            # Needed to pass tests
+            tx.meta.pop('depr', None)
             newEntries = newEntries + new_filtered_entries(tx, params, distribute_over_period, selected_postings, config)
 
     return entries + newEntries, errors
