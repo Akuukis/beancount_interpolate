@@ -21,11 +21,22 @@ def output_txns():
     """
     return list()
 
+@fixture
+def input_txns():
+    """
+    A fixture used by the when and then steps.
+    Allows the "then" steps to access the output of the "when" step.
+
+    Returns:
+      A reference to an empty list.
+    """
+    return list()
+
 
 @given(parsers.parse('the following beancount transaction:{input_txn_text}'))
-def input_txns(input_txn_text):
+def get_input_txns(input_txns, input_txn_text):
     # Load the example beancount transaction from the feature file
-    input_txns, _, _ = load_string(input_txn_text)
+    input_txns[:], _, _ = load_string(input_txn_text)
 
     # Only one entry in feature file example
     assert len(input_txns) == 1

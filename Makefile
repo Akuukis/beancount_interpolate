@@ -1,5 +1,5 @@
-init:
-	pip3 install -r requirements.txt
+install:
+	pip3 install -r requirements.txt --upgrade
 
 test:
 	pytest
@@ -13,4 +13,4 @@ build: clean
 upload: build
 	twine upload dist/*
 
-.PHONY: init test
+.PHONY: install test
