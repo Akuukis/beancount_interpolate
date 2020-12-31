@@ -2,10 +2,10 @@ install:
 	pip3 install -r requirements.txt --upgrade
 
 test:
-	pytest
+	pytest --maxfail=1 -v --cov=beancount_interpolate
 
 clean:
-	rm -rf build dist beancount_oneliner.egg-info/
+	rm -rf build dist beancount_interpolate.egg-info/
 
 build: clean
 	python3 setup.py sdist bdist_wheel
