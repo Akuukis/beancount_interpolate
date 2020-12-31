@@ -33,7 +33,7 @@ def dublicate_over_period(params, default_date, value, config):
     return (dates, amounts)
 
 
-def recur(entries, options_map, config_string):
+def recur(entries, options_map, config_string=""):
     """
     Beancount plugin: Dublicates all entry postings over time.
 
