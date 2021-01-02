@@ -16,13 +16,13 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
 
-    author='Kalvis \'Akuukis\' Kalnins',
+    author='Akuukis',
     author_email='akuukis@kalvis.lv',
     download_url='https://pypi.python.org/pypi/beancount_interpolate',
     license='GNU GPLv3',
     package_data={'beancount_interpolate': ['../README.md']},
     package_dir={'beancount_interpolate': 'beancount_interpolate'},
     packages=['beancount_interpolate'],
-    requires=['beancount (>2.0)'],
+    requires=['beancount (>2.0)', 'beancount_plugin_utils'],
     url='https://github.com/Akuukis/beancount_interpolate',
 )
