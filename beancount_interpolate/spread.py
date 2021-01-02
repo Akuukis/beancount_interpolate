@@ -1,8 +1,7 @@
 __author__ = 'Akuukis <akuukis@kalvis.lv'
 
 from beancount.core.amount import Amount
-from beancount.core.data import filter_txns
-from beancount.core.data import Posting
+from beancount.core.data import Posting, filter_txns, new_metadata
 from beancount.core.number import D
 
 from .common import extract_mark_tx
@@ -70,14 +69,14 @@ def spread(entries, options_map, config_string=""):
 
         # For selected postings change the original.
         for i, new_account, params, posting in selected_postings:
-            tx.postings.pop(i)
+            popped_posting = tx.postings.pop(i)
             tx.postings.insert(i, Posting(
                 account=new_account,
                 units=Amount(posting.units.number, posting.units.currency),
                 cost=None,
                 price=None,
                 flag=None,
-                meta=None))
+                meta=new_metadata(popped_posting.meta['filename'], popped_posting.meta['lineno'])))
 
         # For selected postings add new postings bundled into entries.
         if len(selected_postings) > 0:
