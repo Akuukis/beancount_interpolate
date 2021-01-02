@@ -3,7 +3,7 @@ import math
 import re
 from beancount.core.number import D
 from beancount.core.amount import Amount, mul
-from beancount.core.data import Transaction
+from beancount.core.data import Transaction, new_metadata
 from beancount.core.data import Posting
 
 def round_to(n):
@@ -214,7 +214,7 @@ def new_filtered_entries(tx, params, get_amounts, selected_postings, config):
                               cost=None,
                               price=None,
                               flag=posting.flag,
-                              meta=None))
+                              meta=new_metadata(tx.meta['filename'], tx.meta['lineno'])))
 
             # Asset/Liability that buffers the difference
             map_of_dates[dates[i]].append(Posting(account=posting.account,
@@ -222,7 +222,7 @@ def new_filtered_entries(tx, params, get_amounts, selected_postings, config):
                               cost=None,
                               price=None,
                               flag=posting.flag,
-                              meta=None))
+                              meta=new_metadata(tx.meta['filename'], tx.meta['lineno'])))
 
     new_transactions = []
     for i, (date, postings) in enumerate(sorted(map_of_dates.items())):
@@ -273,7 +273,7 @@ def new_whole_entries(tx, params, get_amounts, config):
                     cost=None,
                     price=None,
                     flag=posting.flag,
-                    meta=None))
+                    meta=new_metadata(tx.meta['filename'], tx.meta['lineno'])))
 
         if len(postings) > 0:
             e = Transaction(
