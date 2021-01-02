@@ -1,108 +1,188 @@
 from pytest import fixture
-from pytest_bdd import scenario, given, when, then, parsers
+from pytest_bdd import given, when, then, parsers
 
+from beancount.core.data import Transaction
 from beancount.core.compare import hash_entry, includes_entries, excludes_entries
 from beancount.loader import load_string
 from beancount.parser import printer
+from beancount_plugin_utils import marked, BeancountError, test_utils
+
 from context import recur, split, spread, depreciate
 
-#
-# Fixtures/steps used by all plugins
-#
 
 @fixture
-def output_txns():
-    """
-    A fixture used by the when and then steps.
-    Allows the "then" steps to access the output of the "when" step.
+def config():
+    return ""
 
-    Returns:
-      A reference to an empty list.
-    """
-    return list()
+@fixture
+def setup_txns_text():
+    return ""
 
 @fixture
 def input_txns():
-    """
-    A fixture used by the when and then steps.
-    Allows the "then" steps to access the output of the "when" step.
+    return list()
 
-    Returns:
-      A reference to an empty list.
-    """
+@fixture
+def output_txns():
+    return list()
+
+@fixture
+def errors():
     return list()
 
 
-@given(parsers.parse('the following beancount transaction:{input_txn_text}'))
-def get_input_txns(input_txns, input_txn_text):
-    # Load the example beancount transaction from the feature file
-    input_txns[:], _, _ = load_string(input_txn_text)
+@given(parsers.parse('this config:'
+                     '{config}'))
+def config_custom(config):
+    return config
 
-    # Only one entry in feature file example
-    assert len(input_txns) == 1
-    return input_txns
+@given(parsers.parse('this setup:'
+                     '{setup_txns_text}'))
+def setup_txns(setup_txns_text):
+    return setup_txns_text
 
-@then(parsers.parse('the original transaction should be modified:'
+
+@when(parsers.parse('this transaction is processed by {variant}:'
+                    '{input_txn_text}'))
+def is_processed(variant, input_txns, errors, config, input_txn_text, setup_txns_text, output_txns):
+    input_txns[:], _, _ = load_string(setup_txns_text + input_txn_text)
+
+    if variant == 'depr':
+        prefix_plugin_text = 'plugin "beancount_interpolate.depreciate" "' + config.strip('\n') + '"\n'
+    elif variant == 'recur':
+        prefix_plugin_text = 'plugin "beancount_interpolate.recur" "' + config.strip('\n') + '"\n'
+    elif variant == 'split':
+        prefix_plugin_text = 'plugin "beancount_interpolate.split" "' + config.strip('\n') + '"\n'
+    elif variant == 'spread':
+        prefix_plugin_text = 'plugin "beancount_interpolate.spread" "' + config.strip('\n') + '"\n'
+    elif variant == 'all':
+        prefix_plugin_text = 'plugin "beancount_interpolate.depreciate" "' + config.strip('\n') + '"\n'
+        prefix_plugin_text = prefix_plugin_text + 'plugin "beancount_interpolate.recur" "' + config.strip('\n') + '"\n'
+        prefix_plugin_text = prefix_plugin_text + 'plugin "beancount_interpolate.split" "' + config.strip('\n') + '"\n'
+        prefix_plugin_text = prefix_plugin_text + 'plugin "beancount_interpolate.spread" "' + config.strip('\n') + '"\n'
+    else:
+        raise RuntimeError('Unknown variant: "{}".'.format(variant))
+
+    full_text = prefix_plugin_text + setup_txns_text + input_txn_text
+    print('\nInput (full & raw):\n------------------------------------------------')
+    print(full_text + '\n')
+    output_txns[:], errors[:], _ = load_string(full_text)
+    print('\nOutput (Transactions):\n------------------------------------------------\n')
+    for txn in output_txns:
+        print(printer.format_entry(txn))
+    print('\nOutput (Errors):\n------------------------------------------------\n')
+    for error in errors:
+        print(printer.format_error(error))
+
+
+@then(parsers.parse('that transaction should be modified:'
                     '{correctly_modified_txn_text}'))
-def original_txn_modified(output_txns, correctly_modified_txn_text):
-
+def original_txn_modified(input_txns, output_txns, errors, correctly_modified_txn_text):
     # Get modified original transaction from output of plugin
-    # The modified originial transaction will be the first in the list of output transactions
-    modified_txn = output_txns[0]
-
+    # The modified originial transaction will be the last in the list of output transactions
+    try:
+        last = input_txns[len(input_txns)-1]
+        modified_txn = test_utils.strip_flaky_meta([txn for txn in output_txns if txn.date == last.date and txn.narration == last.narration][0])
+    except IndexError as error:
+        raise error
     # Get correctly modified original transaction from feature file
-    correctly_modified_txn = load_string(correctly_modified_txn_text)[0][0]
+    correctly_modified_txn = test_utils.strip_flaky_meta(load_string(correctly_modified_txn_text)[0][-1])
 
-    assert hash_entry(modified_txn, True) == hash_entry(correctly_modified_txn, True)
+    print(" ; RECEIVED:\n", printer.format_entry(modified_txn))
+    print(" ; EXPECTED:\n", printer.format_entry(correctly_modified_txn))
 
-@then(parsers.parse('the original transaction should be removed'))
-def original_txn_removed(input_txns, output_txns):
-    # excludes_entries returns tuple of success, missing_entries. We want to check the first value.
-    assert excludes_entries(input_txns, output_txns)[0]
+    # Compare strings instead of hashes because that's an easy way to exclude filename & lineno meta.
 
-@then(parsers.parse('the original transaction should be kept unmodified'))
-def original_txn_unmodified(input_txns, output_txns):
-    # includes_entries returns tuple of success, missing_entries. We want to check the first value.
-    assert includes_entries(input_txns, output_txns)[0]
+    try:
+        print("RECEIVED:\n", modified_txn)
+        print("EXPECTED:\n", correctly_modified_txn)
+        assert hash_entry(modified_txn) == hash_entry(correctly_modified_txn)
 
-@then(parsers.parse('{correct_num_to_generate:d} new transactions should be generated'))
+    except AssertionError:
+        # Rethrow as a nicely formatted diff
+        assert printer.format_entry(modified_txn) == '\n'+correctly_modified_txn_text+'\n'
+        # But in case strings matches..
+        raise Exception("Transactions do not match, although their printed output is equal. See log output.")
+
+@then(parsers.parse('that transaction should not be modified'))
+def tx_not_modified(input_txns, output_txns):
+    original_txn = test_utils.strip_flaky_meta(input_txns[-1])
+    modified_txn = test_utils.strip_flaky_meta(output_txns[len(input_txns)-1])
+    try:
+        assert hash_entry(original_txn) == hash_entry(modified_txn)
+    except AssertionError:
+        print("RECEIVED:", modified_txn)
+        print("EXPECTED:", original_txn)
+        # Rethrow as a nicely formatted diff
+        assert printer.format_entry(modified_txn) == printer.format_entry(original_txn)
+        # But in case strings matches..
+        raise Exception("Transactions do not match, although their printed output is equal. See log output.")
+
+@then(parsers.parse('should not error'))
+def not_error(errors):
+    assert len(errors) == 0
+
+# @then(parsers.parse('should produce config error:'
+#                     '{exception_text}'))
+# def config_error(input_txns, errors, exception_text):
+#     original_txn = input_txns[-1]
+#     assert len(errors) == 1
+#     expected_error = example_plugin.PluginExampleError(original_txn.meta, exception_text.strip('\n'), original_txn)
+#     assert type(errors[0]) is type(expected_error)
+#     assert errors[0].message == expected_error.message
+#     assert errors[0].entry == None
+
+# @then(parsers.parse('should produce plugin error:'
+#                     '{exception_text}'))
+# def plugin_error(input_txns, errors, exception_text):
+#     original_txn = input_txns[-1]
+#     assert len(errors) == 1
+#     expected_error = example_plugin.PluginExampleError(original_txn.meta, exception_text.strip('\n'), original_txn)
+#     assert type(errors[0]) is type(expected_error)
+#     assert errors[0].message == expected_error.message
+#     assert test_utils.strip_flaky_meta(errors[0].entry) == test_utils.strip_flaky_meta(expected_error.entry)
+
+# @then(parsers.parse('should produce marked error:'
+#                     '{exception_text}'))
+# def marked_error(input_txns, errors, exception_text):
+#     original_txn = input_txns[-1]
+#     assert len(errors) == 1
+#     expected_error = marked.PluginUtilsMarkedError(original_txn.meta, exception_text.strip('\n'), original_txn)
+#     assert type(errors[0]) is type(expected_error)
+#     assert errors[0].message == expected_error.message
+#     assert test_utils.strip_flaky_meta(errors[0].entry) == test_utils.strip_flaky_meta(expected_error.entry)
+
+# @then(parsers.parse('should produce beancount error:'
+#                     '{exception_text}'))
+# def beancount_error(input_txns, errors, exception_text, output_txns):
+#     original_txn = input_txns[-1]
+#     modified_txn = output_txns[-1]
+#     assert len(errors) == 1
+#     expected_error = BeancountError.BeancountError(original_txn.meta, exception_text.strip('\n'), original_txn)
+#     assert errors[0].message == expected_error.message and errors[0].entry == modified_txn
+
+
+
+@then(parsers.parse('there should be total of {correct_num_to_generate:d} transactions'))
 def correct_num_txns_generated(output_txns, correct_num_to_generate):
 
-    # Get newly generated transactions from output of plugin (should be tagged appropriately)
-    generated_txns = [txn for txn in output_txns if
-                      any(x in ["splitted", "spreaded", "recurred", "depreciated"] for x in txn.tags)]
+    # Get transactions from output of plugin (should be tagged appropriately)
+    transactions = [txn for txn in output_txns if isinstance(txn, Transaction)]
 
-    assert len(generated_txns) == correct_num_to_generate
+    assert len(transactions) == correct_num_to_generate
 
-@then(parsers.parse('the newly generated transactions should include:'
+@then(parsers.parse('the transactions should include:'
                     '{correctly_generated_txn_text}'))
 def newly_generated_txns(output_txns, correctly_generated_txn_text):
 
-    # Get newly generated transactions from output of plugin (should be tagged appropriately)
-    generated_txns = [txn for txn in output_txns if
-                      any(x in ["splitted", "spreaded", "recurred", "depreciated"] for x in txn.tags)]
+    # Get transactions from output of plugin (should be tagged appropriately)
+    transactions = [txn for txn in output_txns if isinstance(txn, Transaction)]
 
     # Get correctly generated transactions from feature file
     correctly_generated_txns, _, _ = load_string(correctly_generated_txn_text)
 
-    has_correct, missing_entries = includes_entries(correctly_generated_txns, generated_txns)
+    has_correct, missing_entries = includes_entries(correctly_generated_txns, transactions)
 
     print("Missing entries: {}".format(len(missing_entries)))
 
     assert has_correct
-
-@when(parsers.parse('the beancount-recur plugin is executed'))
-def recur_txn(output_txns, input_txns):
-    output_txns[:], _ = recur.recur(input_txns, {})
-
-@when(parsers.parse('the beancount-split plugin is executed'))
-def split_txn(output_txns, input_txns):
-    output_txns[:], _ = split.split(input_txns, {})
-
-@when(parsers.parse('the beancount-spread plugin is executed'))
-def spread_txn(output_txns, input_txns):
-    output_txns[:], _ = spread.spread(input_txns, {})
-
-@when(parsers.parse('the beancount-depreciate plugin is executed'))
-def depreciate_txn(output_txns, input_txns):
-    output_txns[:], _ = depreciate.depreciate(input_txns, {})
