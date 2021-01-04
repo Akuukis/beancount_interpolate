@@ -23,6 +23,6 @@ setup(
     package_data={'beancount_interpolate': ['../README.md']},
     package_dir={'beancount_interpolate': 'beancount_interpolate'},
     packages=['beancount_interpolate'],
-    requires=['beancount (>2.0)', 'beancount_plugin_utils'],
+    install_requires=['beancount >= 2.0', 'beancount_plugin_utils >= 0.0.2'],
     url='https://github.com/Akuukis/beancount_interpolate',
 )
