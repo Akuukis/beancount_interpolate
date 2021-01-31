@@ -63,6 +63,11 @@ def split(entries, options_map, config_string=""):
         if('split' in tx.meta):
             tx.meta.pop('split')
 
+        for alias in config['aliases_after']:
+            if alias in tx.tags:
+                tx = tx._replace(
+                    tags=tx.tags.difference([alias]),
+                )
 
         newEntries = newEntries + new_whole_entries(tx, params, distribute_over_period, config)
 
