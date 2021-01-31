@@ -275,6 +275,10 @@ def new_whole_entries(tx, params, get_amounts, config):
                     flag=posting.flag,
                     meta=new_metadata(tx.meta['filename'], tx.meta['lineno'])))
 
+        tags = frozenset({config['tag']})
+        if hasattr(tx, 'tags') and tx.tags:
+            tags = frozenset().union(*[tags, tx.tags])
+
         if len(postings) > 0:
             e = Transaction(
                 date=closing_dates[i],
@@ -282,7 +286,7 @@ def new_whole_entries(tx, params, get_amounts, config):
                 flag=tx.flag,
                 payee=tx.payee,
                 narration=tx.narration + config['suffix']%(i+1, len(closing_dates)),
-                tags={config['tag']},
+                tags=tags,
                 links=tx.links,
                 postings=postings)
             new_transactions.append(e)
