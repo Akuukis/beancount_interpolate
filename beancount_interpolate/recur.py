@@ -79,6 +79,12 @@ def recur(entries, options_map, config_string=""):
         if('recur' in tx.meta):
             tx.meta.pop('recur')
 
+        for alias in config['aliases_after']:
+            if alias in tx.tags:
+                tx = tx._replace(
+                    tags=tx.tags.difference([alias]),
+                )
+
         newEntries = newEntries + new_whole_entries(tx, params, dublicate_over_period, config)
 
     for trash in trashbin:
