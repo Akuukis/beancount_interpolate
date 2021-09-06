@@ -1,4 +1,4 @@
-__author__ = 'Akuukis <akuukis@kalvis.lv'
+__author__ = 'Akuukis <akuukis@kalvis.lv>'
 
 from beancount.core.number import D
 from beancount.core.data import filter_txns

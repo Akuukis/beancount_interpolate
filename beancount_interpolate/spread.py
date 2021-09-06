@@ -1,4 +1,4 @@
-__author__ = 'Akuukis <akuukis@kalvis.lv'
+__author__ = 'Akuukis <akuukis@kalvis.lv>'
 
 from beancount.core.amount import Amount
 from beancount.core.data import Posting, filter_txns, new_metadata

@@ -1,4 +1,4 @@
-__author__ = 'Akuukis <akuukis@kalvis.lv'
+__author__ = 'Akuukis <akuukis@kalvis.lv>'
 import datetime
 import math
 
