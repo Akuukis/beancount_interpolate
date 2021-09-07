@@ -4,7 +4,7 @@ Feature: Spread income or expense postings over a period
         Given this setup:
             2010-01-01 open Income:TheCompany:NetSalary
             2010-01-01 open Liabilities:Current:TheCompany:NetSalary
-            2010-01-01 open Assets:MyBank:Chequing
+            2010-01-01 open Assets:MyBank:Checking
 
         When this transaction is processed by spread:
             2016-06-15 * "The Company" "Salary for June"
@@ -12,6 +12,7 @@ Feature: Spread income or expense postings over a period
                     spread: "Month @ 2016-06-01"
                 Assets:MyBank:Checking           300.00 EUR
 
+        Then should not error
         Then there should be total of 31 transactions
         Then that transaction should be modified:
             2016-06-15 * "The Company" "Salary for June"
