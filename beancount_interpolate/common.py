@@ -138,8 +138,10 @@ def distribute_over_period(params, default_date, total_value, config):
             dates.append(begin_date + i * step)
         i += 1
         if(begin_date + i * step > datetime.date.today()):
-            # TODO: If today is reached before begin_date + duration is reached,
-            # the accumulated amounts do not sum up to the original amount
+            # If today is reached before begin_date + duration is reached,
+            # add the remaining of total_value to the last amount
+            if sum(amounts) != total_value:
+                amounts[-1] += total_value - sum(amounts)
             break
 
     return (dates, amounts)
