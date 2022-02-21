@@ -26,11 +26,13 @@ def extract_mark_posting(posting, config):
     return False
 
 
-def get_number_of_txn(begin_date, duration, step):
+def get_number_of_txn(begin_date, duration, step, max_txn=float('inf')):
     n_txn = 0
     end_date = begin_date + duration
     while begin_date + n_txn * step < end_date:
         n_txn += 1
+        if n_txn > max_txn:
+            break
     return n_txn
 
 
@@ -77,6 +79,11 @@ def parse_mark(mark, default_date, config):
             duration = parse_length(parts[0])
         else:
             duration = parse_length(config['default_duration'])
+            
+        try:
+            begin_date + duration
+        except OverflowError:
+            duration = relativedelta(days=(datetime.datetime(datetime.MAXYEAR, 12, 31).date() - begin_date).days)
 
         if parts[4]:
             step = parse_length(parts[4])
@@ -111,7 +118,7 @@ def distribute_over_period(params, default_date, total_value, config):
     """
 
     begin_date, duration, step = parse_mark(params, default_date, config)
-    period = get_number_of_txn(begin_date, duration, step)
+    period = get_number_of_txn(begin_date, duration, step, max_txn=config['max_new_tx'])
 
     if(period > config['max_new_tx']):
         period = config['max_new_tx']
@@ -153,14 +160,17 @@ def parse_length(int_or_string):
         pass
 
     try:
+        max_days = (
+            datetime.datetime(datetime.MAXYEAR, 12, 31).date() - datetime.datetime(datetime.MINYEAR, 1, 1).date()
+        ).days
         dictionary = {
             'day': relativedelta(days=+1),
             'week': relativedelta(weeks=+1),
-            'month': relativedelta(months=+1),  # TODO.
-            'year': relativedelta(years=+1),  # TODO.
-            'inf': relativedelta(days=+(365000000)),
-            'infinite': relativedelta(days=+(365000000)),
-            'max': relativedelta(days=+(365000000))
+            'month': relativedelta(months=+1),
+            'year': relativedelta(years=+1),
+            'inf': relativedelta(days=+max_days),
+            'infinite': relativedelta(days=+max_days),
+            'max': relativedelta(days=+max_days)
         }
         return dictionary[int_or_string.lower()]
     except:
