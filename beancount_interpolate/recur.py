@@ -24,7 +24,7 @@ def dublicate_over_period(params, default_date, value, config):
     dates = []
     amounts = []
     i = 0
-    while begin_date + i * step < begin_date + duration and begin_date + i * step <= datetime.date.today():
+    while (begin_date + i * step) < (begin_date + duration) and (begin_date + i * step) <= datetime.date.today():
         amounts.append(D(str(value)))
         dates.append(begin_date + i * step)
         i += 1

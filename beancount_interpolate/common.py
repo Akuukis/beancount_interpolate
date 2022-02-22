@@ -129,7 +129,7 @@ def distribute_over_period(params, default_date, total_value, config):
     accumulated_remainder = D(str(0))
 
     i = 0
-    while begin_date + i * step < begin_date + duration and begin_date + i * step <= datetime.date.today():
+    while (begin_date + i * step) < (begin_date + duration) and (begin_date + i * step) <= datetime.date.today():
         accumulated_remainder += total_value / period
         if(abs(round_to(accumulated_remainder)) >= abs(round_to(config['min_value']))):
             amount = D(str(round_to(accumulated_remainder)))
