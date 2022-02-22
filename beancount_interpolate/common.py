@@ -85,26 +85,30 @@ def parse_mark(mark, default_date, config):
 
     try:
         parts = re.findall(RE_PARSING, mark)[0]
-        if parts[1] and parts[2]:
-            day = int(parts[3]) if parts[3] != '' else 1
-            begin_date = datetime.date(int(parts[1]), int(parts[2]), day)
+        if parts[2] and parts[3]:
+            day = int(parts[4]) if parts[4] != '' else 1
+            begin_date = datetime.date(int(parts[2]), int(parts[3]), day)
         else:
             begin_date = default_date
 
-        if parts[0]:
-            duration = parse_length(parts[0])
+        duration_multiplier = int(parts[0]) if parts[0] != '' else 1
+        if parts[1]:
+            duration = parse_length(parts[1])
         else:
             duration = parse_length(config['default_duration'])
+        duration *= duration_multiplier
 
         try:
             begin_date + duration
         except OverflowError:
             duration = relativedelta(days=(datetime.datetime(datetime.MAXYEAR, 12, 31).date() - begin_date).days)
 
-        if parts[4]:
-            step = parse_length(parts[4])
+        step_multiplier = int(parts[5]) if parts[5] != '' else 1
+        if parts[6]:
+            step = parse_length(parts[6])
         else:
             step = parse_length(config['default_step'])
+        step *= step_multiplier
 
     except Exception as e:
         # TODO: Error handling
@@ -119,7 +123,7 @@ def parse_mark(mark, default_date, config):
 
 # Infer Duration, start and steps. Spacing optinonal. Format: [123|KEYWORD] [@ YYYY-MM[-DD]] [/ step]
 # 0. max duration, 1. year, 2. month, 3. day, 4. min step
-RE_PARSING = re.compile(r"^\s*?([^-/\s]+)?\s*?(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?\s*?(?:\/\s*?([^-/\s]+)?\s*?)?$")
+RE_PARSING = re.compile(r"^\s*([0-9]+(?=[\sa-zA-Z]+)(?!\s*[@$/]))?\s*?([^-/\s]+)?\s*?(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?\s*?(?:\/\s*?([0-9]+)?\s*([^-/\s]+)?\s*?)?$")
 def distribute_over_period(params, default_date, total_value, config):
     """
     Distribute value over points in time.
@@ -144,6 +148,7 @@ def distribute_over_period(params, default_date, total_value, config):
     amounts = []
     accumulated_remainder = D(str(0))
 
+    # TODO: In the following `begin_date + i * step` can result in an OverflowError
     i = 0
     end_date = begin_date + duration
     today_date = datetime.date.today()
@@ -181,9 +186,13 @@ def parse_length(int_or_string):
         ).days
         dictionary = {
             'day': relativedelta(days=+1),
+            'days': relativedelta(days=+1),
             'week': relativedelta(weeks=+1),
+            'weeks': relativedelta(weeks=+1),
             'month': relativedelta(months=+1),
+            'months': relativedelta(months=+1),
             'year': relativedelta(years=+1),
+            'years': relativedelta(years=+1),
             'inf': relativedelta(days=+max_days),
             'infinite': relativedelta(days=+max_days),
             'max': relativedelta(days=+max_days)
