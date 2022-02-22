@@ -1,4 +1,5 @@
 beancount
 beancount_plugin_utils
 pytest-bdd
+pytest-cov
 twine
