@@ -86,7 +86,8 @@ def parse_mark(mark, default_date, config):
     try:
         parts = re.findall(RE_PARSING, mark)[0]
         if parts[1] and parts[2]:
-            begin_date = datetime.date(int(parts[1]), int(parts[2]), int(parts[3]) or 1)
+            day = int(parts[3]) if parts[3] != '' else 1
+            begin_date = datetime.date(int(parts[1]), int(parts[2]), day)
         else:
             begin_date = default_date
 
