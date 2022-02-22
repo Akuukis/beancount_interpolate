@@ -70,26 +70,30 @@ def parse_mark(mark, default_date, config):
 
     try:
         parts = re.findall(RE_PARSING, mark)[0]
-        if parts[1] and parts[2]:
-            day = max(1, int(parts[3]) if parts[3] != '' else 1)
-            begin_date = datetime.date(int(parts[1]), int(parts[2]), day)
+        if parts[2] and parts[3]:
+            day = max(1, int(parts[4]) if parts[4] != '' else 1)
+            begin_date = datetime.date(int(parts[2]), int(parts[3]), day)
         else:
             begin_date = default_date
 
-        if parts[0]:
-            duration = parse_length(parts[0])
+        duration_multiplier = int(parts[0]) if parts[0] != '' else 1
+        if parts[1]:
+            duration = parse_length(parts[1])
         else:
             duration = parse_length(config['default_duration'])
+        duration *= duration_multiplier
             
         try:
             begin_date + duration
         except OverflowError:
             duration = relativedelta(days=(datetime.datetime(datetime.MAXYEAR, 12, 31).date() - begin_date).days)
 
-        if parts[4]:
-            step = parse_length(parts[4])
+        step_multiplier = int(parts[5]) if parts[5] != '' else 1
+        if parts[6]:
+            step = parse_length(parts[6])
         else:
             step = parse_length(config['default_step'])
+        step *= step_multiplier
 
     except Exception as e:
         # TODO: Error handling
@@ -104,7 +108,7 @@ def parse_mark(mark, default_date, config):
 
 # Infer Duration, start and steps. Spacing optinonal. Format: [123|KEYWORD] [@ YYYY-MM[-DD]] [/ step]
 # 0. max duration, 1. year, 2. month, 3. day, 4. min step
-RE_PARSING = re.compile(r"^\s*?([^-/\s]+)?\s*?(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?\s*?(?:\/\s*?([^-/\s]+)?\s*?)?$")
+RE_PARSING = re.compile(r"^\s*([0-9]+)?\s*?([^-/\s]+)?\s*?(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?\s*?(?:\/\s*?([0-9]+)?\s*([^-/\s]+)?\s*?)?$")
 def distribute_over_period(params, default_date, total_value, config):
     """
     Distribute value over points in time.
