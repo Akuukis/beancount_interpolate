@@ -1,8 +1,6 @@
 __author__ = 'Akuukis <akuukis@kalvis.lv'
 import datetime
-import math
 
-from beancount.core.amount import Amount
 from beancount.core.data import filter_txns
 from beancount.core.number import D
 
@@ -10,13 +8,14 @@ from .common import extract_mark_tx
 from .common import new_whole_entries
 from .common import read_config
 from .common import parse_mark
+from .common import get_number_of_txn
 
 __plugins__ = ['recur']
 
 
 def dublicate_over_period(params, default_date, value, config):
     begin_date, duration, step = parse_mark(params, default_date, config)
-    period = math.floor( duration / step )
+    period = get_number_of_txn(begin_date, duration, step, config['max_new_tx'])
 
     if(period > config['max_new_tx']):
         period = config['max_new_tx']
@@ -24,11 +23,11 @@ def dublicate_over_period(params, default_date, value, config):
 
     dates = []
     amounts = []
-    date = begin_date
-    while date < begin_date + datetime.timedelta(days=duration) and date <= datetime.date.today():
-        amounts.append( D(str(value)) )
-        dates.append(date)
-        date = date + datetime.timedelta(days=step)
+    i = 0
+    while begin_date + i * step < begin_date + duration and begin_date + i * step <= datetime.date.today():
+        amounts.append(D(str(value)))
+        dates.append(begin_date + i * step)
+        i += 1
 
     return (dates, amounts)
 
