@@ -88,6 +88,11 @@ def parse_mark(mark, default_date, config):
         else:
             duration = parse_length(config['default_duration'])
 
+        try:
+            begin_date + duration
+        except OverflowError:
+            duration = relativedelta(days=(datetime.datetime(datetime.MAXYEAR, 12, 31).date() - begin_date).days)
+
         if parts[4]:
             step = parse_length(parts[4])
         else:
@@ -161,14 +166,17 @@ def parse_length(int_or_string):
         pass
 
     try:
+        max_days = (
+            datetime.datetime(datetime.MAXYEAR, 12, 31).date() - datetime.datetime(datetime.MINYEAR, 1, 1).date()
+        ).days
         dictionary = {
             'day': relativedelta(days=+1),
             'week': relativedelta(weeks=+1),
-            'month': relativedelta(months=+1),  # TODO.
-            'year': relativedelta(years=+1),  # TODO.
-            'inf': relativedelta(days=+(365000000)),
-            'infinite': relativedelta(days=+(365000000)),
-            'max': relativedelta(days=+(365000000))
+            'month': relativedelta(months=+1),
+            'year': relativedelta(years=+1),
+            'inf': relativedelta(days=+max_days),
+            'infinite': relativedelta(days=+max_days),
+            'max': relativedelta(days=+max_days)
         }
         return dictionary[int_or_string.lower()]
     except:
