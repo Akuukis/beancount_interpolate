@@ -1,5 +1,5 @@
 import datetime
-import math
+from dateutil.relativedelta import relativedelta
 import re
 from beancount.core.number import D
 from beancount.core.amount import Amount, mul
@@ -24,6 +24,24 @@ def extract_mark_posting(posting, config):
         if hasattr(posting, 'meta') and posting.meta and alias in posting.meta:
             return posting.meta[alias]
     return False
+
+
+def get_number_of_txn(begin_date, duration, step, max_txn=float('inf')):
+    """
+    Computes the number of transactions within a given interval and step length.
+
+    Note: As the current implementation is a bit costly with a very large duration
+    and a small step size there is a `max_txn` parameter which can be set.
+    This is meant to be used with the config `max_new_txn`.
+    Upon exceeding `max_txn` the function returns `max_txn + 1`.
+    """
+    n_txn = 0
+    end_date = begin_date + duration
+    while begin_date + n_txn * step < end_date:
+        n_txn += 1
+        if n_txn > max_txn:
+            break
+    return n_txn
 
 
 def extract_mark_tx(tx, config):
@@ -103,7 +121,7 @@ def distribute_over_period(params, default_date, total_value, config):
     """
 
     begin_date, duration, step = parse_mark(params, default_date, config)
-    period = math.floor( duration / step )
+    period = get_number_of_txn(begin_date, duration, step, max_txn=config['max_new_tx'])
 
     if(period > config['max_new_tx']):
         period = config['max_new_tx']
@@ -111,18 +129,18 @@ def distribute_over_period(params, default_date, total_value, config):
 
     dates = []
     amounts = []
-    date = begin_date
     accumulated_remainder = D(str(0))
 
-    while date < begin_date + datetime.timedelta(days=duration) and date <= datetime.date.today():
+    i = 0
+    while begin_date + i * step < begin_date + duration and begin_date + i * step <= datetime.date.today():
         accumulated_remainder += total_value / period
         if(abs(round_to(accumulated_remainder)) >= abs(round_to(config['min_value']))):
             amount = D(str(round_to(accumulated_remainder)))
             accumulated_remainder -= amount
             amounts.append(amount)
-            dates.append(date)
-        date = date + datetime.timedelta(days=step)
-        if(date > datetime.date.today()):
+            dates.append(begin_date + i * step)
+        i += 1
+        if(begin_date + i * step > datetime.date.today()):
             break
 
     return (dates, amounts)
@@ -144,13 +162,13 @@ def parse_length(int_or_string):
 
     try:
         dictionary = {
-            'day': 1,
-            'week': 7,
-            'month': 30,  # TODO.
-            'year': 365,  # TODO.
-            'inf': 365*1000000,
-            'infinite': 365*1000000,
-            'max': 365*1000000
+            'day': relativedelta(days=+1),
+            'week': relativedelta(weeks=+1),
+            'month': relativedelta(months=+1),  # TODO.
+            'year': relativedelta(years=+1),  # TODO.
+            'inf': relativedelta(days=+(365000000)),
+            'infinite': relativedelta(days=+(365000000)),
+            'max': relativedelta(days=+(365000000))
         }
         return dictionary[int_or_string.lower()]
     except:
