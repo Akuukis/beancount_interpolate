@@ -10,7 +10,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='beancount_interpolate',
-    version='2.3.2',
+    version='2.3.4',
     description='Plugins for Beancount to interpolate transactions',
 
     long_description=long_description,
