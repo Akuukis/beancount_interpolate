@@ -15,7 +15,7 @@ __plugins__ = ['recur']
 
 def dublicate_over_period(params, default_date, value, config):
     begin_date, duration, step = parse_mark(params, default_date, config)
-    period = get_number_of_txn(begin_date, duration, step, config['max_new_tx'])
+    period = get_number_of_txn(begin_date, duration, step)
 
     if(period > config['max_new_tx']):
         period = config['max_new_tx']
