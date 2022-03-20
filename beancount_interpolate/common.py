@@ -161,7 +161,7 @@ def parse_length(int_or_string):
         A integer.
     """
     try:
-        return int(int_or_string)
+        return relativedelta(days=+int(int_or_string))
     except:
         pass
 
