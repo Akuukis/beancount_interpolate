@@ -1,6 +1,9 @@
 install:
 	pip3 install -r requirements.txt --upgrade
 
+try:
+	pip3 install .
+
 test:
 	pytest --maxfail=1 -v --cov=beancount_interpolate
 
