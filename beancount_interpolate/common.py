@@ -33,8 +33,8 @@ def get_number_of_txn(begin_date, duration, step):
 
     Note: This implementation requires 'step' to contain unique units which means either one of 'years', 'months' or
     'days'. Something like e.g. 'months=2, days=3' is not supported and might lead to wrong results.
-    """    
-    
+    """
+
     end_date = begin_date + duration
     diff = relativedelta(end_date, begin_date)
     if step.years:
@@ -144,16 +144,18 @@ def distribute_over_period(params, default_date, total_value, config):
     accumulated_remainder = D(str(0))
 
     i = 0
-    while begin_date + i * step < begin_date + duration and begin_date + i * step <= datetime.date.today():
+    end_date = begin_date + duration
+    today_date = datetime.date.today()
+    tmp_date = begin_date + i * step
+    while tmp_date < end_date and tmp_date <= today_date:
         accumulated_remainder += total_value / period
         if(abs(round_to(accumulated_remainder)) >= abs(round_to(config['min_value']))):
             amount = D(str(round_to(accumulated_remainder)))
             accumulated_remainder -= amount
             amounts.append(amount)
-            dates.append(begin_date + i * step)
+            dates.append(tmp_date)
         i += 1
-        if(begin_date + i * step > datetime.date.today()):
-            break
+        tmp_date = begin_date + i * step
 
     return (dates, amounts)
 
