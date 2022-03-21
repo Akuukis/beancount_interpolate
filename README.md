@@ -120,7 +120,14 @@ Second, plugin inserts 30 or 31 transactions from 2016-05-01 to 2016-05-31 like 
     Liabilities:Current:TheCompany:NetSalary         10.00 EUR
 ```
 
+### Notes
 
+The content of meta tag consists of 3 parts, every of them optional:
+1. numeric amount or a period - case-insensitive keyword "day", "week", "month" or "year". Defaults to "1".
+1. start date, prefixed with `@` sign. Defaults to transaction date.
+1. step size, prefixed with `/` sign. Can be either keyword from as period. Defaults to "day".
+
+Summary: `[x|period] [@ YYYY-MM[-DD]] [/ step]`
 
 
 Details: Recur
