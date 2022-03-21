@@ -1,4 +1,5 @@
 import datetime
+from dateutil.relativedelta import relativedelta
 import math
 import re
 from beancount.core.number import D
@@ -24,6 +25,30 @@ def extract_mark_posting(posting, config):
         if hasattr(posting, 'meta') and posting.meta and alias in posting.meta:
             return posting.meta[alias]
     return False
+
+
+def get_number_of_txn(begin_date, duration, step):
+    """
+    Computes the number of transactions within a given interval and step length.
+
+    Note: This implementation requires 'step' to contain unique units which means either one of 'years', 'months' or
+    'days'. Something like e.g. 'months=2, days=3' is not supported and might lead to wrong results.
+    """
+
+    end_date = begin_date + duration
+    diff = relativedelta(end_date, begin_date)
+    if step.years:
+        n_txn = math.floor(diff.years / step.years)
+    elif step.months:
+        diff_months = diff.months + 12 * diff.years
+        n_txn = math.floor(diff_months / step.months)
+    elif step.days:
+        diff_days = (end_date - begin_date).days
+        n_txn = math.floor(diff_days / step.days)
+    else:
+        raise ValueError(f"Unsupported step size of '{step}'. Units of 'years', 'months', 'days' have to be explicit")
+
+    return n_txn
 
 
 def extract_mark_tx(tx, config):
@@ -70,6 +95,11 @@ def parse_mark(mark, default_date, config):
         else:
             duration = parse_length(config['default_duration'])
 
+        try:
+            begin_date + duration
+        except OverflowError:
+            duration = relativedelta(days=(datetime.datetime(datetime.MAXYEAR, 12, 31).date() - begin_date).days)
+
         if parts[4]:
             step = parse_length(parts[4])
         else:
@@ -103,7 +133,7 @@ def distribute_over_period(params, default_date, total_value, config):
     """
 
     begin_date, duration, step = parse_mark(params, default_date, config)
-    period = math.floor( duration / step )
+    period = get_number_of_txn(begin_date, duration, step)
 
     if(period > config['max_new_tx']):
         period = config['max_new_tx']
@@ -111,19 +141,21 @@ def distribute_over_period(params, default_date, total_value, config):
 
     dates = []
     amounts = []
-    date = begin_date
     accumulated_remainder = D(str(0))
 
-    while date < begin_date + datetime.timedelta(days=duration) and date <= datetime.date.today():
+    i = 0
+    end_date = begin_date + duration
+    today_date = datetime.date.today()
+    tmp_date = begin_date + i * step
+    while tmp_date < end_date and tmp_date <= today_date:
         accumulated_remainder += total_value / period
         if(abs(round_to(accumulated_remainder)) >= abs(round_to(config['min_value']))):
             amount = D(str(round_to(accumulated_remainder)))
             accumulated_remainder -= amount
             amounts.append(amount)
-            dates.append(date)
-        date = date + datetime.timedelta(days=step)
-        if(date > datetime.date.today()):
-            break
+            dates.append(tmp_date)
+        i += 1
+        tmp_date = begin_date + i * step
 
     return (dates, amounts)
 
@@ -138,19 +170,22 @@ def parse_length(int_or_string):
         A integer.
     """
     try:
-        return int(int_or_string)
+        return relativedelta(days=+int(int_or_string))
     except:
         pass
 
     try:
+        max_days = (
+            datetime.datetime(datetime.MAXYEAR, 12, 31).date() - datetime.datetime(datetime.MINYEAR, 1, 1).date()
+        ).days
         dictionary = {
-            'day': 1,
-            'week': 7,
-            'month': 30,  # TODO.
-            'year': 365,  # TODO.
-            'inf': 365*1000000,
-            'infinite': 365*1000000,
-            'max': 365*1000000
+            'day': relativedelta(days=+1),
+            'week': relativedelta(weeks=+1),
+            'month': relativedelta(months=+1),
+            'year': relativedelta(years=+1),
+            'inf': relativedelta(days=+max_days),
+            'infinite': relativedelta(days=+max_days),
+            'max': relativedelta(days=+max_days)
         }
         return dictionary[int_or_string.lower()]
     except:
