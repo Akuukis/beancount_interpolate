@@ -24,10 +24,14 @@ def duplicate_over_period(params, default_date, value, config):
     dates = []
     amounts = []
     i = 0
-    while begin_date + i * step < begin_date + duration and begin_date + i * step <= datetime.date.today():
+    end_date = begin_date + duration
+    today_date = datetime.date.today()
+    tmp_date = begin_date + i * step
+    while tmp_date < end_date and tmp_date <= today_date:
         amounts.append(D(str(value)))
-        dates.append(begin_date + i * step)
+        dates.append(tmp_date)
         i += 1
+        tmp_date = begin_date + i * step
 
     return (dates, amounts)
 
