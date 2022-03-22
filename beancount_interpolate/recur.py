@@ -13,7 +13,7 @@ from .common import get_number_of_txn
 __plugins__ = ['recur']
 
 
-def dublicate_over_period(params, default_date, value, config):
+def duplicate_over_period(params, default_date, value, config):
     begin_date, duration, step = parse_mark(params, default_date, config)
     period = get_number_of_txn(begin_date, duration, step)
 
@@ -34,7 +34,7 @@ def dublicate_over_period(params, default_date, value, config):
 
 def recur(entries, options_map, config_string=""):
     """
-    Beancount plugin: Dublicates all entry postings over time.
+    Beancount plugin: Duplicates all entry postings over time.
 
     Args:
       entries: A list of directives. We're interested only in the Transaction instances.
@@ -84,7 +84,7 @@ def recur(entries, options_map, config_string=""):
                     tags=tx.tags.difference([alias]),
                 )
 
-        newEntries = newEntries + new_whole_entries(tx, params, dublicate_over_period, config)
+        newEntries = newEntries + new_whole_entries(tx, params, duplicate_over_period, config)
 
     for trash in trashbin:
         entries.remove(trash)
