@@ -137,11 +137,11 @@ RE_PARSING = re.compile((
     r"^\s*([0-9]+(?=[\sa-zA-Z]+)(?!\s*[@$/]))?"
 
     # Match 'period' to be anything except '-', '/' or whitespace.
-    r"\s*?([^-/\s]+)?"
+    r"\s*([^-/\s]+)?"
 
     # Look for an @ and the following start date specification.
     # Specifying the date is optional.
-    r"\s*(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?"
+    r"\s*(?:@\s*([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?"
 
     # Look for an '/' which might be followed by a step size multiplicator
     # and step size.
