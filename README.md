@@ -122,12 +122,14 @@ Second, plugin inserts 30 or 31 transactions from 2016-05-01 to 2016-05-31 like 
 
 ### Notes
 
-The content of meta tag consists of 3 parts, every of them optional:
-1. numeric amount or a period - case-insensitive keyword "day", "week", "month" or "year". Defaults to "1".
-1. start date, prefixed with `@` sign. Defaults to transaction date.
-1. step size, prefixed with `/` sign. Can be either keyword from as period. Defaults to "day".
+The content of meta tag consists of 5 parts, every of them optional:
+1. amount `x`, a whole number. Defaults to 1.
+2. `period`, a case-insensitive keyword "day[s]", "week[s]", "month[s]" or "year[s]". Defaults to "day".
+3. start date, prefixed with `@` sign. Defaults to transaction date.
+4. step multiplier `m`, a whole number. Defaults to 1.
+5. `step` size, can be either keyword from as period. Defaults to "day".
 
-Summary: `[x|period] [@ YYYY-MM[-DD]] [/ step]`
+Summary: `[x] [period] [@ YYYY-MM[-DD]] [/ [m] [step]]`
 
 
 Details: Recur

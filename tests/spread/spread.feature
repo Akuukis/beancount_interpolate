@@ -94,3 +94,61 @@ Feature: Spread income or expense postings over a period
             2016-06-17 * "The Company" "Internet bill for June (spread 3/3)" #spreaded
                 Assets:Current:Bills:Internet                   25.0 EUR
                 Expenses:Bills:Internet                        -25.0 EUR
+
+    Scenario: Spread utility bill expenses over 3 days with period
+        Given this setup:
+            2010-01-01 open Expenses:Bills:Internet
+            2010-01-01 open Assets:MyBank:Checking
+            2010-01-01 open Assets:Current:Bills:Internet
+
+        When this transaction is processed by spread:
+            2016-06-15 * "The Company" "Internet bill for June"
+                Expenses:Bills:Internet                        -75.00 EUR
+                    spreadAfter: "3 day @ 2016-06-15"
+                Assets:MyBank:Checking                          75.00 EUR
+
+        Then should not error
+        Then there should be total of 4 transactions
+        Then that transaction should be modified:
+            2016-06-15 * "The Company" "Internet bill for June"
+                Assets:Current:Bills:Internet                  -75.00 EUR
+                Assets:MyBank:Checking                          75.00 EUR
+        Then the transactions should include:
+            2016-06-15 * "The Company" "Internet bill for June (spread 1/3)" #spreaded
+                Assets:Current:Bills:Internet                   25.0 EUR
+                Expenses:Bills:Internet                        -25.0 EUR
+            2016-06-16 * "The Company" "Internet bill for June (spread 2/3)" #spreaded
+                Assets:Current:Bills:Internet                   25.0 EUR
+                Expenses:Bills:Internet                        -25.0 EUR
+            2016-06-17 * "The Company" "Internet bill for June (spread 3/3)" #spreaded
+                Assets:Current:Bills:Internet                   25.0 EUR
+                Expenses:Bills:Internet                        -25.0 EUR
+
+    Scenario: Spread utility bill expenses over 6 weeks bi-weekly
+        Given this setup:
+            2010-01-01 open Expenses:Bills:Internet
+            2010-01-01 open Assets:MyBank:Checking
+            2010-01-01 open Assets:Current:Bills:Internet
+
+        When this transaction is processed by spread:
+            2016-06-15 * "The Company" "Internet bill for June"
+                Expenses:Bills:Internet                        -75.00 EUR
+                    spreadAfter: "6 weeks @ 2016-06-15 / 2 weeks"
+                Assets:MyBank:Checking                          75.00 EUR
+
+        Then should not error
+        Then there should be total of 4 transactions
+        Then that transaction should be modified:
+            2016-06-15 * "The Company" "Internet bill for June"
+                Assets:Current:Bills:Internet                  -75.00 EUR
+                Assets:MyBank:Checking                          75.00 EUR
+        Then the transactions should include:
+            2016-06-15 * "The Company" "Internet bill for June (spread 1/3)" #spreaded
+                Assets:Current:Bills:Internet                   25.0 EUR
+                Expenses:Bills:Internet                        -25.0 EUR
+            2016-06-29 * "The Company" "Internet bill for June (spread 2/3)" #spreaded
+                Assets:Current:Bills:Internet                   25.0 EUR
+                Expenses:Bills:Internet                        -25.0 EUR
+            2016-07-13 * "The Company" "Internet bill for June (spread 3/3)" #spreaded
+                Assets:Current:Bills:Internet                   25.0 EUR
+                Expenses:Bills:Internet                        -25.0 EUR
