@@ -121,9 +121,37 @@ def parse_mark(mark, default_date, config):
     return begin_date, duration, step
 
 
-# Infer Duration, start and steps. Spacing optinonal. Format: [123|KEYWORD] [@ YYYY-MM[-DD]] [/ step]
-# 0. max duration, 1. year, 2. month, 3. day, 4. min step
-RE_PARSING = re.compile(r"^\s*([0-9]+(?=[\sa-zA-Z]+)(?!\s*[@$/]))?\s*?([^-/\s]+)?\s*?(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?\s*?(?:\/\s*?([0-9]+)?\s*([^-/\s]+)?\s*?)?$")
+# Infer Duration, start and steps. Spacing optional.
+# Format: [x] [period] [@ YYYY-MM[-DD]] [/ [m] step]
+# x: period multiplier or number of days
+# period: keyword ('day[s]', 'week[s]', 'month[s]', 'year[s]')
+# YYYY-MM-DD: start date
+# m: multiplier for step size
+# step: step size with either the number of days or a keyword
+# (see period)
+RE_PARSING = re.compile((
+    # Match 'x' but only if there does not follow @, / or end of line as then we have
+    # to match it to 'period'. If we combine 'x' with 'period' there has to be a space
+    # or letter following, which is ensured by '(?=[\sa-zA-Z]+)'. It basically looks
+    # for a 'digit boundary'.
+    r"^\s*([0-9]+(?=[\sa-zA-Z]+)(?!\s*[@$/]))?"
+
+    # Match 'period' to be anything except '-', '/' or whitespace.
+    r"\s*?([^-/\s]+)?"
+
+    # Look for an @ and the following start date specification.
+    # Specifying the date is optional.
+    r"\s*(?:@\s*?([0-9]{4})-([0-9]{2})(?:-([0-9]{2}))?)?"
+
+    # Look for an '/' which might be followed by a step size multiplicator
+    # and step size.
+    # Only match the multiplicator if there is a step size (as number or keyword)
+    # following. Otherwise this number has to be matched as the step size itself.
+    # Works similar to the regex for 'x' and 'period'.
+    r"\s*(?:\/\s*([0-9]+(?=[\sa-zA-Z])(?!\s*$))?\s*([^-/\s]+)?\s*)?$"
+))
+
+
 def distribute_over_period(params, default_date, total_value, config):
     """
     Distribute value over points in time.
@@ -149,6 +177,10 @@ def distribute_over_period(params, default_date, total_value, config):
     accumulated_remainder = D(str(0))
 
     # TODO: In the following `begin_date + i * step` can result in an OverflowError
+    # If 'begin_date + i * step' is already close to the maximum date that a 'datetime'
+    # object can hold but still fulfilling the while condition, then
+    # 'begin_date + (i + 1) * step' might lead to an OverflowError because it exceeds
+    # the maximum possible date which can be hold by a 'datetime' object.
     i = 0
     end_date = begin_date + duration
     today_date = datetime.date.today()
