@@ -94,3 +94,32 @@ Feature: Split a transaction over a period
             2016-06-30 * "Me" "Set aside money for savings (split 30/30)" #split-month #splitted
                 Assets:MyBank:Savings              2.0 EUR
                 Assets:MyBank:Chequing            -2.0 EUR
+
+    Scenario: Split without losing cents
+        When this transaction is processed by split:
+            2016-06-01 * "Me" "Lost some pennies somewhere" #split-17
+                Assets:MyBank:Savings             0.27 EUR
+                Assets:MyBank:Chequing           -0.27 EUR
+
+        Then should not error
+        Then there should be total of 5 transactions
+        Then the transactions should include:
+            2016-06-03 * "Me" "Lost some pennies somewhere (split 1/5)" #split-17 #splitted
+                Assets:MyBank:Savings    0.05 EUR
+                Assets:MyBank:Chequing  -0.05 EUR
+
+            2016-06-06 * "Me" "Lost some pennies somewhere (split 2/5)" #split-17 #splitted
+                Assets:MyBank:Savings    0.05 EUR
+                Assets:MyBank:Chequing  -0.05 EUR
+
+            2016-06-10 * "Me" "Lost some pennies somewhere (split 3/5)" #split-17 #splitted
+                Assets:MyBank:Savings    0.06 EUR
+                Assets:MyBank:Chequing  -0.06 EUR
+
+            2016-06-13 * "Me" "Lost some pennies somewhere (split 4/5)" #split-17 #splitted
+                Assets:MyBank:Savings    0.05 EUR
+                Assets:MyBank:Chequing  -0.05 EUR
+
+            2016-06-17 * "Me" "Lost some pennies somewhere (split 5/5)" #split-17 #splitted
+                Assets:MyBank:Savings    0.06 EUR
+                Assets:MyBank:Chequing  -0.06 EUR
