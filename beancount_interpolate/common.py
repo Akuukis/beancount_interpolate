@@ -195,6 +195,13 @@ def distribute_over_period(params, default_date, total_value, config):
         i += 1
         tmp_date = begin_date + i * step
 
+    if sum(amounts) != total_value:
+        if len(amounts) == 0:
+            amounts.append(D(str(total_value)))
+            dates.append(begin_date)
+        else:
+            amounts[-1] += (total_value - sum(amounts))
+
     return (dates, amounts)
 
 

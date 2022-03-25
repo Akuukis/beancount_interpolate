@@ -123,3 +123,32 @@ Feature: Split a transaction over a period
             2016-06-17 * "Me" "Lost some pennies somewhere (split 5/5)" #split-17 #splitted
                 Assets:MyBank:Savings    0.06 EUR
                 Assets:MyBank:Chequing  -0.06 EUR
+
+    Scenario: Split small amount over month
+        When this transaction is processed by split:
+            2020-06-01 * "shop" "cookies" #split-month
+                Assets:MyBank:Chequing                           0.13 EUR
+                Assets:MyBank:Savings                           -0.13 EUR
+
+        Then should not error
+        Then there should be total of 2 transactions
+        Then the transactions should include:
+            2020-06-11 * "shop" "cookies (split 1/2)" #split-month #splitted
+                Assets:MyBank:Savings                           -0.05 EUR
+                Assets:MyBank:Chequing                           0.05 EUR
+            2020-06-22 * "shop" "cookies (split 2/2)" #split-month #splitted
+                Assets:MyBank:Savings                           -0.08 EUR
+                Assets:MyBank:Chequing                           0.08 EUR
+
+    Scenario: Split amount below min_value over month
+        When this transaction is processed by split:
+            2020-06-01 * "shop" "cookies" #split-month
+                Assets:MyBank:Chequing                           0.03 EUR
+                Assets:MyBank:Savings                           -0.03 EUR
+
+        Then should not error
+        Then there should be total of 1 transactions
+        Then the transactions should include:
+            2020-06-01 * "shop" "cookies (split 1/1)" #split-month #splitted
+                Assets:MyBank:Savings                           -0.03 EUR
+                Assets:MyBank:Chequing                           0.03 EUR

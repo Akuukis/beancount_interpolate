@@ -152,3 +152,50 @@ Feature: Spread income or expense postings over a period
             2016-07-13 * "The Company" "Internet bill for June (spread 3/3)" #spreaded
                 Assets:Current:Bills:Internet                   25.0 EUR
                 Expenses:Bills:Internet                        -25.0 EUR
+
+    Scenario: Spread small amount over month
+        Given this setup:
+            2020-01-01 open Expenses:Random
+            2020-01-01 open Assets:Cash
+            2020-01-01 open Assets:Current:Random
+
+        When this transaction is processed by spread:
+            2020-06-01 * "shop" "cookies" #spread-month
+                Expenses:Random                                  0.13 EUR
+                Assets:Cash                                     -0.13 EUR
+
+        Then should not error
+        Then there should be total of 3 transactions
+        Then that transaction should be modified:
+            2020-06-01 * "shop" "cookies" #spread-month
+                Assets:Current:Random                            0.13 EUR
+                Assets:Cash                                     -0.13 EUR
+        Then the transactions should include:
+            2020-06-11 * "shop" "cookies (spread 1/2)" #spread-month #spreaded
+                Assets:Current:Random                           -0.05 EUR
+                Expenses:Random                                  0.05 EUR
+            2020-06-22 * "shop" "cookies (spread 2/2)" #spread-month #spreaded
+                Assets:Current:Random                           -0.08 EUR
+                Expenses:Random                                  0.08 EUR
+
+    Scenario: Spread amount below min_value over month
+        Given this setup:
+            2020-01-01 open Expenses:Random
+            2020-01-01 open Assets:Cash
+            2020-01-01 open Assets:Current:Random
+
+        When this transaction is processed by spread:
+            2020-06-01 * "shop" "cookies" #spread-month
+                Expenses:Random                                  0.03 EUR
+                Assets:Cash                                     -0.03 EUR
+
+        Then should not error
+        Then there should be total of 2 transactions
+        Then that transaction should be modified:
+            2020-06-01 * "shop" "cookies" #spread-month
+                Assets:Current:Random                            0.03 EUR
+                Assets:Cash                                     -0.03 EUR
+        Then the transactions should include:
+            2020-06-01 * "shop" "cookies (spread 1/1)" #spread-month #spreaded
+                Assets:Current:Random                           -0.03 EUR
+                Expenses:Random                                  0.03 EUR
