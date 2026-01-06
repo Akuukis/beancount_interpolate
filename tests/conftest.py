@@ -32,12 +32,12 @@ def errors():
 
 
 @given(parsers.parse('this config:'
-                     '{config}'))
+                     '{config}'), target_fixture="config")
 def config_custom(config):
     return config
 
 @given(parsers.parse('this setup:'
-                     '{setup_txns_text}'))
+                     '{setup_txns_text}'), target_fixture="setup_txns_text")
 def setup_txns(setup_txns_text):
     return setup_txns_text
 
