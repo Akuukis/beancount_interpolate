@@ -38,6 +38,7 @@ def depreciate(entries, options_map, config_string=""):
         'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),
         'suffix'          : config_obj.pop('suffix'          , ' (depr %d/%d)'),
         'tag'             : config_obj.pop('tag'             , 'depreciated'),
+        'allow_future'    : config_obj.pop('allow_future'    , False),
         'translations'    : {
             config_obj.pop('account_assets'  , 'Assets:Fixed')     : config_obj.pop('account_expenses', 'Expenses:Depreciation'),
             config_obj.pop('account_liab'    , 'Liabilities:Fixed'): config_obj.pop('account_income'  , 'Income:Appreciation'),

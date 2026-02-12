@@ -43,6 +43,7 @@ def spread(entries, options_map, config_string=""):
         'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),
         'suffix'          : config_obj.pop('suffix'          , ' (spread %d/%d)'),
         'tag'             : config_obj.pop('tag'             , 'spreaded'),
+        'allow_future'    : config_obj.pop('allow_future'    , False),
         'translations'    : {
             config_obj.pop('account_expenses', 'Expenses'): config_obj.pop('account_assets'  , 'Assets:Current'),
             config_obj.pop('account_income'  , 'Income')  : config_obj.pop('account_liab'    , 'Liabilities:Current'),

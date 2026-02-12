@@ -295,6 +295,7 @@ Options that applies to all four plugins:
 * `max_new_tx` - integer that will be the maximal amount of newly created transactions.
 * `suffix` - string appended to created transaction annotations. Two variables are n-th transaction and total amount of transactions.
 * `tag` - string that as tag will be applied to all created transactions.
+* `allow_future` - boolean, if true the plugin will generate entries for future dates. Defaults to false (entries are only generated up to today, with the remainder accumulated into the last entry).
 
 Options that applies only to `spread` and `depr`. For `spread` new transactions are created under account name where `account_expense` and `account_income` prefixes are swapped to `account_assets` or `account_liab` prefixes respectively. For `depr` that other way around: `account_assets` and `account_liab` prefixes are swapped to `account_expense` and `account_income` prefixes instead.
 * `account_income`
@@ -315,7 +316,8 @@ plugin "beancount_interpolate.recur" "{
     'min_value': 0.05,
     'max_new_tx': 9999,
     'suffix': ' (recur %d/%d)',
-    'tag': 'recurred'
+    'tag': 'recurred',
+    'allow_future': False
 }"
 
 plugin "beancount_interpolate.split" "{
@@ -326,7 +328,8 @@ plugin "beancount_interpolate.split" "{
     'min_value': 0.05,
     'max_new_tx': 9999,
     'suffix': ' (split %d/%d)',
-    'tag': 'splitted'
+    'tag': 'splitted',
+    'allow_future': False
 }"
 
 plugin "beancount_interpolate.spread" "{
@@ -341,7 +344,8 @@ plugin "beancount_interpolate.spread" "{
     'min_value': 0.05,  # cannot be smaller than 0.01
     'max_new_tx': 9999,
     'suffix': ' (spread %d/%d)',
-    'tag': 'spreaded'
+    'tag': 'spreaded',
+    'allow_future': False
 }"
 
 plugin "beancount_interpolate.depr" "{
@@ -355,7 +359,8 @@ plugin "beancount_interpolate.depr" "{
     'min_value': 0.05,  # cannot be smaller than 0.01
     'max_new_tx': 9999,
     'suffix': ' (depr %d/%d)',
-    'tag': 'depred'
+    'tag': 'depred',
+    'allow_future': False
 }"
 ```
 

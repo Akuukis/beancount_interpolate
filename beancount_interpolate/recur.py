@@ -26,8 +26,9 @@ def duplicate_over_period(params, default_date, value, config):
     i = 0
     end_date = begin_date + duration
     today_date = datetime.date.today()
+    allow_future = config.get('allow_future', False)
     tmp_date = begin_date + i * step
-    while tmp_date < end_date and tmp_date <= today_date:
+    while tmp_date < end_date and (allow_future or tmp_date <= today_date):
         amounts.append(D(str(value)))
         dates.append(tmp_date)
         i += 1
@@ -62,6 +63,7 @@ def recur(entries, options_map, config_string=""):
         'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),
         'suffix'          : config_obj.pop('suffix'          , ' (recur %d/%d)'),
         'tag'             : config_obj.pop('tag'             , 'recurred'),
+        'allow_future'    : config_obj.pop('allow_future'    , False),
     }
 
     newEntries = []

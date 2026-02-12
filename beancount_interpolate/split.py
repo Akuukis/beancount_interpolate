@@ -38,6 +38,7 @@ def split(entries, options_map, config_string=""):
         'max_new_tx'      : config_obj.pop('max_new_tx'      , 9999),
         'suffix'          : config_obj.pop('suffix'          , ' (split %d/%d)'),
         'tag'             : config_obj.pop('tag'             , 'splitted'),
+        'allow_future'    : config_obj.pop('allow_future'    , False),
     }
 
     newEntries = []

@@ -178,6 +178,37 @@ Feature: Spread income or expense postings over a period
                 Assets:Current:Random                           -0.08 EUR
                 Expenses:Random                                  0.08 EUR
 
+    Scenario: Spread expenses over future days with allow_future
+        Given this config:
+            {'allow_future': True}
+        Given this setup:
+            2010-01-01 open Expenses:Bills:Internet
+            2010-01-01 open Assets:MyBank:Checking
+            2010-01-01 open Assets:Current:Bills:Internet
+
+        When this transaction is processed by spread:
+            2099-06-15 * "The Company" "Internet bill for June"
+                Expenses:Bills:Internet                        -75.00 EUR
+                    spreadAfter: "3 @ 2099-06-15"
+                Assets:MyBank:Checking                          75.00 EUR
+
+        Then should not error
+        Then there should be total of 4 transactions
+        Then that transaction should be modified:
+            2099-06-15 * "The Company" "Internet bill for June"
+                Assets:Current:Bills:Internet                  -75.00 EUR
+                Assets:MyBank:Checking                          75.00 EUR
+        Then the transactions should include:
+            2099-06-15 * "The Company" "Internet bill for June (spread 1/3)" #spreaded
+                Assets:Current:Bills:Internet                   25.0 EUR
+                Expenses:Bills:Internet                        -25.0 EUR
+            2099-06-16 * "The Company" "Internet bill for June (spread 2/3)" #spreaded
+                Assets:Current:Bills:Internet                   25.0 EUR
+                Expenses:Bills:Internet                        -25.0 EUR
+            2099-06-17 * "The Company" "Internet bill for June (spread 3/3)" #spreaded
+                Assets:Current:Bills:Internet                   25.0 EUR
+                Expenses:Bills:Internet                        -25.0 EUR
+
     Scenario: Spread amount below min_value over month
         Given this setup:
             2020-01-01 open Expenses:Random
