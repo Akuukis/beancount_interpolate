@@ -432,6 +432,8 @@ Development
 
 The source contains five files - one per plugin and commons. Plugins have very similar structure in pairs: spread is similar to depreciate, and recur is similar to split.
 
+Plugin is sensitive to what's a today, therefore for testing purposes there's a time-travel and 2030-01-01 is "today".
+
 Please see Makefile and inline comments.
 
 Note: there's a branch `single-plugin-refactor` that's a up-for-grabs WIP based on v2 by [@benedictvh](https://github.com/benedictvh). See #8 #9, #12 for details.
