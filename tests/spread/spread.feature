@@ -199,3 +199,30 @@ Feature: Spread income or expense postings over a period
             2020-06-01 * "shop" "cookies (spread 1/1)" #spread-month #spreaded
                 Assets:Current:Random                           -0.03 EUR
                 Expenses:Random                                  0.03 EUR
+
+    Scenario: Spread amount below min_value over month
+        Given this setup:
+            2010-01-01 open Income:TheCompany:NetSalary
+            2010-01-01 open Liabilities:Current:TheCompany:NetSalary
+            2010-01-01 open Assets:MyBank:Checking
+
+        When this transaction is processed by spread:
+            2029-12-31 * "The Company" "Salary for this week"
+                Income:TheCompany:NetSalary                    -300.00 EUR
+                    spread: "week"
+                Assets:MyBank:Checking                          300.00 EUR
+
+        Then should not error
+        Then there should be total of 3 transactions
+        Then that transaction should be modified:
+            2029-12-31 * "The Company" "Salary for this week"
+                Liabilities:Current:TheCompany:NetSalary       -300.00 EUR
+                Assets:MyBank:Checking                          300.00 EUR
+        Then the transactions should include:
+            2029-12-31 * "The Company" "Salary for this week (spread 1/2)" #spreaded
+                Liabilities:Current:TheCompany:NetSalary   42.86 EUR
+                Income:TheCompany:NetSalary               -42.86 EUR
+
+            2030-01-01 * "The Company" "Salary for this week (spread 2/2)" #spreaded
+                Liabilities:Current:TheCompany:NetSalary   42.85 EUR
+                Income:TheCompany:NetSalary               -42.85 EUR
