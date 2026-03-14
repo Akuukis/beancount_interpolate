@@ -200,7 +200,7 @@ Feature: Spread income or expense postings over a period
                 Assets:Current:Random                           -0.03 EUR
                 Expenses:Random                                  0.03 EUR
 
-    Scenario: Spread amount below min_value over month
+    Scenario: Spread amount into future
         Given this setup:
             2010-01-01 open Income:TheCompany:NetSalary
             2010-01-01 open Liabilities:Current:TheCompany:NetSalary
