@@ -28,3 +28,24 @@ Feature: Repeat a transaction recur over a period
             2017-06-14 * "Me" "Set aside money for savings (recur 365/365)" #recurred
                 Assets:MyBank:Savings              10.00 EUR
                 Assets:MyBank:Chequing            -10.00 EUR
+
+    Scenario: Recur a transaction with a priced posting
+        Given this setup:
+            2010-01-01 open Assets:MyBank:Checking RUB
+            2010-01-01 open Expenses:Rent USD
+
+        When this transaction is processed by recur:
+            2016-06-15 * "Landlord" "Pay rent"
+                recur: "2 Months / 1 Month"
+                Assets:MyBank:Checking
+                Expenses:Rent                       800 USD @ 61.46 RUB
+
+        Then should not error
+        Then there should be total of 2 transactions
+        Then the transactions should include:
+            2016-06-15 * "Landlord" "Pay rent (recur 1/2)" #recurred
+                Assets:MyBank:Checking            -49168.00 RUB
+                Expenses:Rent                       800 USD @ 61.46 RUB
+            2016-07-15 * "Landlord" "Pay rent (recur 2/2)" #recurred
+                Assets:MyBank:Checking            -49168.00 RUB
+                Expenses:Rent                       800 USD @ 61.46 RUB

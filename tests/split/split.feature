@@ -152,3 +152,24 @@ Feature: Split a transaction over a period
             2020-06-01 * "shop" "cookies (split 1/1)" #split-month #splitted
                 Assets:MyBank:Savings                           -0.03 EUR
                 Assets:MyBank:Chequing                           0.03 EUR
+
+    Scenario: Split a transaction with a priced posting
+        Given this setup:
+            2010-01-01 open Assets:MyBank:Checking RUB
+            2010-01-01 open Expenses:Rent USD
+
+        When this transaction is processed by split:
+            2016-06-15 * "Landlord" "Pay rent"
+                split: "2 Days / 1 Day"
+                Assets:MyBank:Checking
+                Expenses:Rent                       800 USD @ 61.46 RUB
+
+        Then should not error
+        Then there should be total of 2 transactions
+        Then the transactions should include:
+            2016-06-15 * "Landlord" "Pay rent (split 1/2)" #splitted
+                Assets:MyBank:Checking           -24584.0 RUB
+                Expenses:Rent                       400.0 USD @ 61.46 RUB
+            2016-06-16 * "Landlord" "Pay rent (split 2/2)" #splitted
+                Assets:MyBank:Checking           -24584.0 RUB
+                Expenses:Rent                       400.0 USD @ 61.46 RUB

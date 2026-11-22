@@ -339,6 +339,11 @@ def new_whole_entries(tx, params, get_amounts, config):
 
     accumulator_index = longest_leg(all_amounts)
 
+    # Raw numbers only add up to zero for single-currency transactions.  Don't
+    # force a priced/cross-currency transaction into that sum: Beancount has
+    # already balanced it using the posting's cost/price.
+    original_sum = sum(p.units.number for p in tx.postings if p.units is not None)
+
     remainder = D(str(0));
     new_transactions = []
     for i in range(len(closing_dates)):
@@ -349,7 +354,7 @@ def new_whole_entries(tx, params, get_amounts, config):
             if i < len(all_amounts[p]):
                 doublecheck.append(all_amounts[p][i])
         should_be_zero = sum(doublecheck)
-        if should_be_zero != 0:
+        if should_be_zero != 0 and original_sum == 0:
             all_amounts[accumulator_index][i] -= D(str(should_be_zero))
             remainder += should_be_zero
 
@@ -358,8 +363,8 @@ def new_whole_entries(tx, params, get_amounts, config):
                 postings.append(Posting(
                     account=posting.account,
                     units=Amount(all_amounts[p][i], posting.units.currency),
-                    cost=None,
-                    price=None,
+                    cost=posting.cost,
+                    price=posting.price,
                     flag=posting.flag,
                     meta=new_metadata(tx.meta['filename'], tx.meta['lineno'])))
 
